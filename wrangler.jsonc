@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "futstancy",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-20",
+  "observability": {"enabled": true},
+  "d1_databases": [{"binding": "DB", "database_name": "futstancy-db", "migrations_dir": "migrations"}],
+  "triggers": {"crons": ["*/15 * * * *"]}
+}

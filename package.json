@@ -1,0 +1,27 @@
+{
+  "name": "futstancy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Bot de futebol multiplayer do Discord, 100% serverless",
+  "scripts": {
+    "dev": "wrangler dev",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "deploy": "wrangler deploy && wrangler d1 migrations apply DB --remote",
+    "db:local": "wrangler d1 migrations apply DB --local",
+    "db:remote": "wrangler d1 migrations apply DB --remote"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "wrangler": "^4.49.0"
+  },
+  "engines": {"node": ">=22"},
+  "cloudflare": {
+    "bindings": {
+      "DISCORD_PUBLIC_KEY": {"description": "Public Key do aplicativo Discord (General Information)."},
+      "DISCORD_APPLICATION_ID": {"description": "Application ID do novo aplicativo Discord."},
+      "DISCORD_BOT_TOKEN": {"description": "Token do bot em Discord Developer Portal > Bot; sempre armazenar como secret."}
+    }
+  }
+}
