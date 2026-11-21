@@ -43,7 +43,7 @@ test('Worker expõe catálogo de rotas e rejeita keys desconhecidas',async()=>{
   const ctx={waitUntil() {}};
   const status=await worker.fetch(new Request('https://example.org/art/status'),{} as never,ctx);
   assert.equal(status.status,200);
-  assert.equal((await status.json() as {version:string}).version,'2.1.0');
+  assert.equal((await status.json() as {version:string}).version,'3.0.0');
   const no=await worker.fetch(new Request('https://example.org/art/player.png?k=bad'),{} as never,ctx);
   assert.equal(no.status,404);
 });

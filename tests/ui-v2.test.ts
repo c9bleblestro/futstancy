@@ -20,6 +20,6 @@ test('cartas e menus de mercado exibem imagens PNG com botões funcionais',()=>{
   const gallery=components.find(c=>c.type===12);
   assert.ok(gallery);
   assert.equal(gallery?.items?.length,1);
-  assert.match(gallery!.items![0].media.url,/\/art\/player\.png\?k=vinicius&v=3$/);
+  assert.match(gallery!.items![0].media.url,/\/art\/player\.png\?k=vinicius&v=4$/);
   assert.ok(components.some(c=>c.type===1));
 });

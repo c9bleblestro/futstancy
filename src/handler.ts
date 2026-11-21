@@ -33,7 +33,7 @@ async function showCollection(env: Env, owner: string, page: number) {
   const safePage = Math.min(Math.max(0, page), data.pages - 1);
   const lines = data.cards.map((row, index) => {
     const p = getPlayer(row.player_key);
-    return `${safePage * 8 + index + 1}. ${p ? playerLabel(p) : row.player_key}\n    ID: \`${row.id}\``;
+    return `${safePage * 6 + index + 1}. ${p ? playerLabel(p) : row.player_key}\n    ID: \`${row.id}\``;
   });
   return card('🗂️ Sua coleção', `${lines.join('\n\n') || 'Nenhuma carta encontrada.'}\n\n**${data.total} cartas** · Página ${safePage + 1}/${data.pages}`, PURPLE, true,
     rows([

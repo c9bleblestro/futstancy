@@ -33,9 +33,9 @@ export async function ownedCards(db: Database, userId: string, limit = 200): Pro
 export async function collectionPage(db: Database, userId: string, page: number): Promise<{ cards: CardRow[]; total: number; pages: number }> {
   const totalRow = await db.prepare('SELECT COUNT(*) AS n FROM cards WHERE owner_id=?').bind(userId).first<{ n: number }>();
   const total = totalRow?.n ?? 0;
-  const pages = Math.max(1, Math.ceil(total / 8));
+  const pages = Math.max(1, Math.ceil(total / 6));
   const safe = Math.min(Math.max(0, page), pages - 1);
-  const cards = (await db.prepare('SELECT * FROM cards WHERE owner_id=? ORDER BY acquired_ms DESC, id DESC LIMIT 8 OFFSET ?').bind(userId, safe * 8).all<CardRow>()).results;
+  const cards = (await db.prepare('SELECT * FROM cards WHERE owner_id=? ORDER BY acquired_ms DESC, id DESC LIMIT 6 OFFSET ?').bind(userId, safe * 6).all<CardRow>()).results;
   return { cards, total, pages };
 }
 

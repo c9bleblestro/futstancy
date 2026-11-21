@@ -20,7 +20,7 @@ const textDisplay=(content:string)=>({type:10,content});
 function url(path:string,params:Record<string,string>):string {
   const qs=new URLSearchParams(params);
   // Nova chave evita que o cache de imagens do Discord sirva os layouts antigos.
-  qs.set('v','3');
+  qs.set('v','4');
   return ROOT+path+'?'+qs.toString();
 }
 /** Parse the game's own catalog names; NEVER use invented names/OVRs/prices in art. */
@@ -58,7 +58,8 @@ function imageFor(title:string,description:string):string {
   }
   if(t.includes('mercado')){
     const prices=[...description.matchAll(/\*\*([\d.]+) coins\*\*/g)].map(x=>x[1].replace(/\./g,''));
-    return url('/art/market.png',{k:players.slice(0,8).map(p=>p.key).join(','),prices:prices.slice(0,8).join(',')});
+    const codes=[...description.matchAll(/C[oó]digo:\s*`([^`]+)`/g)].map(x=>x[1]);
+    return url('/art/market.png',{k:players.slice(0,8).map(p=>p.key).join(','),prices:prices.slice(0,8).join(','),codes:codes.slice(0,8).join(',')});
   }
   if(t.includes('pacote aberto'))return url('/art/pack.png',{k:players.slice(0,3).map(p=>p.key).join(',')});
   if(t.includes('contratado')||t.includes('transferência concluída')){
