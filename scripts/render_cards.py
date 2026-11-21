@@ -125,6 +125,20 @@ def render(key,name,pos,ovr,country):
   d.text((x,839),str(val),font=ft(29),fill=(254,254,255))
  d.polygon([(350,892),(375,916),(350,939),(325,916)],fill=(*shiny,255))
  d.line([(350,892),(375,916),(350,939),(325,916),(350,892)],fill='white',width=3)
+ # Preserve authentic border fragments from the exact original approved cards.
+ # The inner portrait, OVR, name, position and skills remain player-specific.
+ approved=OUT/('bremer.jpg' if rare=='OURO' else 'bento.jpg')
+ if approved.exists() and key not in ('bento','bremer','endrick'):
+  with Image.open(approved) as original:
+   overlay=original.convert('RGBA').resize((W,H),Image.Resampling.LANCZOS)
+   mask=Image.new('L',(W,H),0)
+   md=ImageDraw.Draw(mask)
+   md.rectangle((0,0,W,108),fill=245)
+   md.rectangle((0,0,100,H-22),fill=245)
+   md.rectangle((W-100,0,W,H-22),fill=245)
+   md.rectangle((0,H-35,W,H),fill=245)
+   mask=mask.filter(ImageFilter.GaussianBlur(7))
+   im=Image.composite(overlay,im,mask)
  dest=OUT/f'{key}.jpg'
  im.convert('RGB').save(dest,format='JPEG',quality=88,subsampling=0,optimize=True,progressive=True)
  print(f'[CARD] {key}: {dest.stat().st_size//1024} KiB',flush=True)
