@@ -9,7 +9,7 @@ export const V2=1<<15;
  * Discord fetches images directly; no Worker image rendering or remote fonts.
  */
 const ASSETS='https://raw.githubusercontent.com/c9bleblestro/futstancy/main/assets';
-const REV='fut-premium-20261121-v5';
+const REV='fut-premium-20261121-v6';
 const cardUrl=(p:Player)=>ASSETS+'/cards/'+encodeURIComponent(p.key)+'.jpg?v='+REV;
 const bannerUrl=(kind:string)=>ASSETS+'/ui/'+kind+'.jpg?v='+REV;
 type Btn={label:string;id:string;style?:number;disabled?:boolean};
