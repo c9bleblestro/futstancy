@@ -72,8 +72,8 @@ def html_thumbnail(title):
 def commons_file_name(thumb):
     url = urllib.parse.urlparse(thumb)
     path = urllib.parse.unquote(url.path)
-    if url.hostname != "upload.wikimedia.org" or "/wikipedia/commons/" not in path:
-        raise ValueError("A imagem não vem do Wikimedia Commons")
+    if url.hostname not in ("upload.wikimedia.org", "thumb.wikimedia.org") or "/wikipedia/commons/" not in path:
+        raise ValueError("Imagem fora Commons: " + str(url.hostname) + " " + path[:80])
     parts = path.split("/")
     return parts[-2] if "/thumb/" in path else parts[-1]
 
