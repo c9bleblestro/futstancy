@@ -179,6 +179,11 @@ def render_banners():
 
 if __name__=='__main__':
  if not PLAYERS:raise SystemExit('Catálogo não reconhecido')
- for player in PLAYERS:render(*player)
+ for player in PLAYERS:
+  # Artes aprovadas pelo usuario sao finais: nao re-renderizar em CI.
+  if player[0] in ('bento','bremer','endrick') and (OUT/(player[0]+'.jpg')).exists():
+   print('[APPROVED] Mantida carta original de '+player[0],flush=True)
+   continue
+  render(*player)
  render_banners()
  print(f'[CARD] {len(PLAYERS)} cartas geradas',flush=True)
