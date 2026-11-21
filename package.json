@@ -1,6 +1,6 @@
 {
   "name": "futstancy",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "description": "Bot de futebol multiplayer do Discord, 100% serverless",
@@ -16,12 +16,23 @@
     "typescript": "^5.9.3",
     "wrangler": "^4.49.0"
   },
-  "engines": {"node": ">=22"},
+  "engines": {
+    "node": ">=22"
+  },
   "cloudflare": {
     "bindings": {
-      "DISCORD_PUBLIC_KEY": {"description": "Public Key do aplicativo Discord (General Information)."},
-      "DISCORD_APPLICATION_ID": {"description": "Application ID do novo aplicativo Discord."},
-      "DISCORD_BOT_TOKEN": {"description": "Token do bot em Discord Developer Portal > Bot; sempre armazenar como secret."}
+      "DISCORD_PUBLIC_KEY": {
+        "description": "Public Key do aplicativo Discord (General Information)."
+      },
+      "DISCORD_APPLICATION_ID": {
+        "description": "Application ID do novo aplicativo Discord."
+      },
+      "DISCORD_BOT_TOKEN": {
+        "description": "Token do bot em Discord Developer Portal > Bot; sempre armazenar como secret."
+      }
     }
+  },
+  "dependencies": {
+    "@cf-wasm/resvg": "^0.3.4"
   }
 }
