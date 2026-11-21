@@ -54,7 +54,14 @@ export default {
   async fetch(request: Request, env: Env, ctx: WorkerCtx): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === 'GET' && url.pathname.startsWith('/art/')) {
-      return await renderArt(request) ?? new Response('Not Found',{status:404});
+      const cache = (globalThis as typeof globalThis & { caches?: CacheStorage }).caches?.default;
+      const saved = cache ? await cache.match(request) : undefined;
+      if (saved) return saved;
+      const artwork = await renderArt(request) ?? new Response('Not Found', {status:404});
+      if (artwork.ok && artwork.headers.get('content-type') === 'image/png' && cache) {
+        ctx.waitUntil(cache.put(request, artwork.clone()));
+      }
+      return artwork;
     }
     if (request.method === 'GET' && url.pathname === '/') {
       return new Response(landing, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60', 'X-Content-Type-Options': 'nosniff' } });
