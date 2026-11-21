@@ -33,7 +33,7 @@ async function photoUrl(key:string):Promise<string|null>{
     api.searchParams.set('titles',wiki[key]);
     const r=await fetch(api.toString());
     if(!r.ok)return null;
-    const data=await r.json() as {query?:{pages?:Record<string,{thumbnail?:{source?:string}}>}}};
+    const data=await r.json() as {query?:{pages?:Record<string,{thumbnail?:{source?:string}}>}};
     const found=Object.values(data.query?.pages??{})[0]?.thumbnail?.source??null;
     const url=found&&found.startsWith('https://upload.wikimedia.org/')?found:null;
     knownPhotos.set(key,url);return url;
