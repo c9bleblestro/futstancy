@@ -1,12 +1,10 @@
 import { COMMANDS, COMMAND_VERSION } from './commands.ts';
-import { renderArt } from './art.ts';
 import { handleInteraction } from './handler.ts';
+import { renderArt } from './art.ts';
 import { jsonResponse } from './ui.ts';
 import type { Env, Interaction } from './types.ts';
 
 const encoder = new TextEncoder();
-
-/** WebCrypto exige ArrayBuffer (não Uint8Array<ArrayBufferLike>) no TypeScript 5.9. */
 function toCryptoBuffer(bytes: Uint8Array): ArrayBuffer {
   const buffer = new ArrayBuffer(bytes.byteLength);
   new Uint8Array(buffer).set(bytes);
@@ -61,26 +59,18 @@ export default {
   async fetch(request: Request, env: Env, ctx: WorkerCtx): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === 'GET' && url.pathname === '/art/status') {
-      return jsonResponse({ status: 'ready', release: '1.1.1', routes: ['/art/player.png?k=vinicius', '/art/banner.png', '/art/team.png', '/art/score.png'] });
-    }
-    if (request.method === 'GET' && url.pathname === '/art/player') {
-      return Response.redirect(new URL('/art/player.png' + url.search, url.origin).toString(), 302);
+      return jsonResponse({ status: 'ready', version: '2.0.0', routes: ['player.png', 'collection.png', 'market.png', 'team.png', 'pack.png', 'score.png', 'banner.png'] });
     }
     if (request.method === 'GET' && url.pathname.startsWith('/art/')) {
-      const cache = (globalThis as typeof globalThis & { caches?: { default?: Cache } }).caches?.default;
-      const saved = cache ? await cache.match(request) : undefined;
-      if (saved) return saved;
-      const artwork = await renderArt(request) ?? new Response('Not Found', {status:404});
-      if (artwork.ok && artwork.headers.get('content-type') === 'image/png' && cache) {
-        ctx.waitUntil(cache.put(request, artwork.clone()));
-      }
-      return artwork;
+      const artwork = await renderArt(request);
+      if (artwork) return artwork;
+      return new Response('Art route not found', {status: 404});
     }
     if (request.method === 'GET' && url.pathname === '/') {
       return new Response(landing, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60', 'X-Content-Type-Options': 'nosniff' } });
     }
     if (request.method === 'GET' && url.pathname === '/health') {
-      return jsonResponse({ name: 'Futstancy', worker: 'online', version: '1.1.1', interactionEndpoint: '/interactions' });
+      return jsonResponse({ name: 'Futstancy', worker: 'online', version: '2.0.0', interactionEndpoint: '/interactions' });
     }
     if (request.method !== 'POST' || url.pathname !== '/interactions') {
       return new Response('Not Found', { status: 404 });
