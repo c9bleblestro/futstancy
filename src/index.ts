@@ -6,6 +6,13 @@ import type { Env, Interaction } from './types.ts';
 
 const encoder = new TextEncoder();
 
+/** WebCrypto exige ArrayBuffer (não Uint8Array<ArrayBufferLike>) no TypeScript 5.9. */
+function toCryptoBuffer(bytes: Uint8Array): ArrayBuffer {
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buffer).set(bytes);
+  return buffer;
+}
+
 function decodeHex(input: string, expectedBytes: number): Uint8Array | null {
   if (input.length !== expectedBytes * 2 || !/^[0-9a-f]+$/i.test(input)) return null;
   return Uint8Array.from(input.match(/.{2}/g) ?? [], c => Number.parseInt(c, 16));
@@ -19,8 +26,8 @@ export async function verifyDiscordRequest(body: string, signature: string | nul
   const sigBytes = decodeHex(signature, 64);
   if (!pubBytes || !sigBytes) return false;
   try {
-    const key = await crypto.subtle.importKey('raw', pubBytes, { name: 'Ed25519' }, false, ['verify']);
-    return await crypto.subtle.verify('Ed25519', key, sigBytes, encoder.encode(timestamp + body));
+    const key = await crypto.subtle.importKey('raw', toCryptoBuffer(pubBytes), { name: 'Ed25519' }, false, ['verify']);
+    return await crypto.subtle.verify('Ed25519', key, toCryptoBuffer(sigBytes), toCryptoBuffer(encoder.encode(timestamp + body)));
   } catch {
     return false;
   }
