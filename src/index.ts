@@ -53,6 +53,12 @@ const landing = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><
 export default {
   async fetch(request: Request, env: Env, ctx: WorkerCtx): Promise<Response> {
     const url = new URL(request.url);
+    if (request.method === 'GET' && url.pathname === '/art/status') {
+      return jsonResponse({ status: 'ready', release: '1.1.1', routes: ['/art/player.png?k=vinicius', '/art/banner.png', '/art/team.png', '/art/score.png'] });
+    }
+    if (request.method === 'GET' && url.pathname === '/art/player') {
+      return Response.redirect(new URL('/art/player.png' + url.search, url.origin).toString(), 302);
+    }
     if (request.method === 'GET' && url.pathname.startsWith('/art/')) {
       const cache = (globalThis as typeof globalThis & { caches?: { default?: Cache } }).caches?.default;
       const saved = cache ? await cache.match(request) : undefined;
@@ -67,7 +73,7 @@ export default {
       return new Response(landing, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60', 'X-Content-Type-Options': 'nosniff' } });
     }
     if (request.method === 'GET' && url.pathname === '/health') {
-      return jsonResponse({ name: 'Futstancy', worker: 'online', version: '1.1.0', interactionEndpoint: '/interactions' });
+      return jsonResponse({ name: 'Futstancy', worker: 'online', version: '1.1.1', interactionEndpoint: '/interactions' });
     }
     if (request.method !== 'POST' || url.pathname !== '/interactions') {
       return new Response('Not Found', { status: 404 });
