@@ -1,4 +1,5 @@
 import { COMMANDS, COMMAND_VERSION } from './commands.ts';
+import { renderArt } from './art.ts';
 import { handleInteraction } from './handler.ts';
 import { jsonResponse } from './ui.ts';
 import type { Env, Interaction } from './types.ts';
@@ -52,11 +53,14 @@ const landing = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><
 export default {
   async fetch(request: Request, env: Env, ctx: WorkerCtx): Promise<Response> {
     const url = new URL(request.url);
+    if (request.method === 'GET' && url.pathname.startsWith('/art/')) {
+      return await renderArt(request) ?? new Response('Not Found',{status:404});
+    }
     if (request.method === 'GET' && url.pathname === '/') {
       return new Response(landing, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60', 'X-Content-Type-Options': 'nosniff' } });
     }
     if (request.method === 'GET' && url.pathname === '/health') {
-      return jsonResponse({ name: 'Futstancy', worker: 'online', version: '1.0.0', interactionEndpoint: '/interactions' });
+      return jsonResponse({ name: 'Futstancy', worker: 'online', version: '1.1.0', interactionEndpoint: '/interactions' });
     }
     if (request.method !== 'POST' || url.pathname !== '/interactions') {
       return new Response('Not Found', { status: 404 });
@@ -79,7 +83,7 @@ export default {
       return jsonResponse(await handleInteraction(interaction, env));
     } catch (err) {
       console.error('[INTERACTION]', err instanceof Error ? err.message : String(err));
-      return jsonResponse({ type: 4, data: { flags: 64, content: '⚠️ Ocorreu um erro temporário. Tente novamente. Se persistir, avise a administração.', allowed_mentions: { parse: [] } } });
+      return jsonResponse({ type: 4, data: { flags: 64 | 32768, components: [{ type: 10, content: '⚠️ Ocorreu um erro temporário. Tente novamente. Se persistir, avise a administração.' }], allowed_mentions: { parse: [] } } });
     }
   },
   async scheduled(_event: unknown, env: Env, ctx: WorkerCtx): Promise<void> {
