@@ -49,7 +49,11 @@ function staticImages(title:string,description:string):string[]{
   const found=playersIn(description,11);
   if(t.includes('coleção')||t.includes('colecao'))return found.length?found.slice(0,6).map(cardUrl):[bannerUrl('default')];
   if(t.includes('mercado'))return found.length?found.slice(0,8).map(cardUrl):[bannerUrl('mercado')];
-  if(t.includes('pacote aberto'))return found.length?found.slice(0,3).map(cardUrl):[bannerUrl('pacote')];
+  if(t.includes('pacote aberto')){
+    const keys=found.slice(0,3).map(p=>p.key).join(',');
+    if(keys==='bento,bremer,endrick')return [ASSETS+'/packs/bento_bremer_endrick.jpg?v='+REV];
+    return found.length?found.slice(0,3).map(cardUrl):[bannerUrl('pacote')];
+  }
   if(t.includes('contratado')||t.includes('transferência concluída'))return found.length?[cardUrl(found[0])]:[bannerUrl('sucesso')];
   if(t.includes('equipe')||t.includes('seu time')){
     const lineup=teamPlayers(description);
