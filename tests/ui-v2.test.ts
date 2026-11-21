@@ -13,13 +13,13 @@ test('todas as respostas usam Components V2, sem embed e sem barra lateral',()=>
   assert.equal((variants[0].data.flags??0)&V2,V2);
   assert.equal((variants[1].data.flags??0)&V2,V2);
 });
-test('cartas e menus de mercado exibem imagens PNG com botões funcionais',()=>{
+test('cartas e menus de mercado exibem cartas JPG pré-geradas com botões funcionais',()=>{
   const view=card('🎁 Jogador contratado!','**Vinícius Júnior** · ATA · 92 OVR',0,false,
     rows([button('Ver coleção','col:123:0',1)]));
   const components=view.data.components as {type:number;items?:{media:{url:string}}[];components?:object[]}[];
   const gallery=components.find(c=>c.type===12);
   assert.ok(gallery);
   assert.equal(gallery?.items?.length,1);
-  assert.match(gallery!.items![0].media.url,/\/art\/player\.png\?k=vinicius&v=4$/);
+  assert.match(gallery!.items![0].media.url,/\/assets\/cards\/vinicius\.jpg\?v=fut-premium-20261121-v5$/);
   assert.ok(components.some(c=>c.type===1));
 });
