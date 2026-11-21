@@ -36,5 +36,6 @@ jobs:
           git add assets/cards/ assets/ui/
           if ! git diff --cached --quiet; then
             git commit -m 'assets: publish premium cards for all 44 footballers'
+            git pull --rebase origin main
             git push origin HEAD:main
           fi
