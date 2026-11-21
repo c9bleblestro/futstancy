@@ -19,7 +19,7 @@ const wiki:Record<string,string> = {
 };
 const esc=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const safe=(s:string,n=36)=>esc(s.replace(/[\r\n\t]/g,' ').slice(0,n));
-const label=(x:number,y:number,s:string,size=30,color='#ffffff',anchor='start')=>'<text x="'+x+'" y="'+y+'" text-anchor="'+anchor+'" font-family="sans-serif" font-weight="900" font-size="'+size+'" fill="'+color+'">'+safe(s,50)+'</text>';
+const label=(x:number,y:number,s:string,size=30,color='#ffffff',anchor='start')=>'<text x="'+x+'" y="'+y+'" text-anchor="'+anchor+'" font-family="Lato, sans-serif" font-weight="900" font-size="'+size+'" fill="'+color+'">'+safe(s,50)+'</text>';
 const shell=(w:number,h:number,parts:string)=>'<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"><defs><linearGradient id="bg"><stop stop-color="#050b1c"/><stop offset="1" stop-color="#132f6c"/></linearGradient><linearGradient id="gold"><stop stop-color="#fff5bf"/><stop offset=".45" stop-color="#b9a4ff"/><stop offset="1" stop-color="#51d9ff"/></linearGradient></defs><rect width="'+w+'" height="'+h+'" fill="url(#bg)"/>'+parts+'</svg>';
 
 const knownPhotos=new Map<string,string|null>();
@@ -104,9 +104,21 @@ function scoreSvg(u:URL):string{
     label(500,305,home+'  ×  '+away,120,'#ffffff','middle')+
     label(500,468,'PARTIDA ENCERRADA',32,'#f7d28b','middle'));
 }
+let fontOnce: Promise<Uint8Array> | undefined;
+async function loadFont():Promise<Uint8Array>{
+  if(!fontOnce)fontOnce=(async()=>{
+    const response=await fetch('https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf');
+    if(!response.ok)throw new Error('Fonte pública temporariamente indisponível');
+    const bytes=new Uint8Array(await response.arrayBuffer());
+    if(bytes.byteLength>1200000)throw new Error('Arquivo de fonte muito grande');
+    return bytes;
+  })().catch(error=>{fontOnce=undefined;throw error;});
+  return fontOnce;
+}
 async function raster(svg:string):Promise<Response>{
   const {Resvg}=await import('@cf-wasm/resvg/workerd');
-  const instance=await Resvg.async(svg,{fitTo:{mode:'width',value:850}});
+  const font=await loadFont();
+  const instance=await Resvg.async(svg,{fitTo:{mode:'width',value:850},font:{fontBuffers:[font],loadSystemFonts:false,defaultFontFamily:'Lato',sansSerifFamily:'Lato'}});
   const bytes=instance.render().asPng() as Uint8Array<ArrayBuffer>;
   return new Response(bytes,{headers:{'content-type':'image/png','cache-control':'public, max-age=7200','x-content-type-options':'nosniff'}});
 }
