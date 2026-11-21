@@ -129,7 +129,56 @@ def render(key,name,pos,ovr,country):
  im.convert('RGB').save(dest,format='JPEG',quality=88,subsampling=0,optimize=True,progressive=True)
  print(f'[CARD] {key}: {dest.stat().st_size//1024} KiB',flush=True)
 
+
+def render_banner(kind,title,subtitle,col):
+    outdir=ROOT/'assets/ui';outdir.mkdir(parents=True,exist_ok=True)
+    w,h=1180,460
+    image=Image.new('RGB',(w,h));d=ImageDraw.Draw(image)
+    for y in range(h):d.line((0,y,w,y),fill=mix((5,10,29),mix((15,26,58),col,.28),y/h))
+    halo=Image.new('RGBA',(w,h));hd=ImageDraw.Draw(halo)
+    hd.ellipse((550,-250,1390,650),fill=(*col,110))
+    image=Image.alpha_composite(image.convert('RGBA'),halo.filter(ImageFilter.GaussianBlur(120)))
+    d=ImageDraw.Draw(image,'RGBA')
+    rnd=random.Random(kind)
+    for i in range(17):
+        x=rnd.randint(580,1175);y=rnd.randint(20,400)
+        d.polygon([(x,y),(x+rnd.randint(-80,150),y-140),(x+rnd.randint(-90,180),y+160)],fill=(*col,rnd.randint(12,53)))
+    d.rounded_rectangle((28,26,w-28,h-27),radius=30,outline=(*col,228),width=3)
+    for k in range(5):
+        d.line((45,340+k*10,1135,340+k*10),fill=(*col,max(5,60-k*10)),width=2)
+    d.rounded_rectangle((66,64,327,117),radius=14,fill=(6,14,34,240),outline=(*col,220),width=2)
+    d.text((88,75),'♛  FUTSTANCY',font=ft(26),fill=(240,249,255))
+    d.text((80,172),title[:34],font=ft(48 if len(title)<23 else 36),fill=(255,255,255))
+    d.text((84,257),subtitle[:58],font=ft(23),fill=(195,223,246))
+    d.text((87,380),'COLECIONE  •  JOGUE  •  CONQUISTE',font=ft(21),fill=(*col,255))
+    # Abstract diamond mark: original Futstancy game motif.
+    cx=950;cy=204
+    d.polygon([(cx,74),(cx+116,cy),(cx,340),(cx-116,cy)],fill=(*col,80),outline=(*col,245),width=5)
+    d.polygon([(cx,126),(cx+72,cy),(cx,285),(cx-72,cy)],fill=(6,14,35,220),outline=(255,255,255,210),width=3)
+    dest=outdir/f'{kind}.jpg'
+    image.convert('RGB').save(dest,'JPEG',quality=86,optimize=True,progressive=True)
+
+def render_banners():
+    definitions={
+        'default':('FUTSTANCY','Seu clube. Sua história.',(80,182,255)),
+        'ajuda':('GUIA DO TREINADOR','Descubra todos os sistemas do Futstancy.',(95,214,255)),
+        'inicio':('CLUBE CRIADO!','Sua carreira de futebol começa agora.',(85,223,180)),
+        'perfil':('PERFIL DO TREINADOR','Sua jornada, conquistas e estatísticas.',(92,161,255)),
+        'ranking':('RANKING GLOBAL','Os treinadores mais fortes da temporada.',(255,198,93)),
+        'daily':('RECOMPENSA DIÁRIA','Ganhe coins e evolua seu elenco.',(255,201,90)),
+        'sucesso':('JOGADA CONCLUÍDA','Continue crescendo dentro do Futstancy.',(86,224,160)),
+        'erro':('TENTE NOVAMENTE','Confira as informações e continue jogando.',(255,133,160)),
+        'cooldown':('AGUARDE UM POUCO','Sua próxima recompensa está chegando.',(154,141,255)),
+        'mercado':('MERCADO DE TRANSFERÊNCIAS','Compre, venda e descubra novos craques.',(97,205,250)),
+        'desafio':('DESAFIO LANÇADO','O estádio espera por mais uma partida.',(222,149,255)),
+        'pacote':('PACOTE DE JOGADORES','Três novos reforços para a sua coleção.',(255,199,91)),
+        'time':('SEU TIME TITULAR','Onze jogadores, um único objetivo.',(76,232,190)),
+    }
+    for key,(title,sub,col) in definitions.items():render_banner(key,title,sub,col)
+    print(f'[BANNER] {len(definitions)} painéis publicados',flush=True)
+
 if __name__=='__main__':
  if not PLAYERS:raise SystemExit('Catálogo não reconhecido')
  for player in PLAYERS:render(*player)
+ render_banners()
  print(f'[CARD] {len(PLAYERS)} cartas geradas',flush=True)
