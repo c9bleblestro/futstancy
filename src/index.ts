@@ -54,7 +54,7 @@ export default {
   async fetch(request: Request, env: Env, ctx: WorkerCtx): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === 'GET' && url.pathname.startsWith('/art/')) {
-      const cache = (globalThis as typeof globalThis & { caches?: CacheStorage }).caches?.default;
+      const cache = (globalThis as typeof globalThis & { caches?: { default?: Cache } }).caches?.default;
       const saved = cache ? await cache.match(request) : undefined;
       if (saved) return saved;
       const artwork = await renderArt(request) ?? new Response('Not Found', {status:404});
