@@ -19,6 +19,8 @@ export function rows(buttons:Btn[]):object[]{
 const textDisplay=(content:string)=>({type:10,content});
 function url(path:string,params:Record<string,string>):string {
   const qs=new URLSearchParams(params);
+  // Nova chave evita que o cache de imagens do Discord sirva os layouts antigos.
+  qs.set('v','3');
   return ROOT+path+'?'+qs.toString();
 }
 /** Parse the game's own catalog names; NEVER use invented names/OVRs/prices in art. */
