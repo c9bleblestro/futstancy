@@ -46,8 +46,22 @@ const agent = 'Futstancy/2.0 ('+defaultId+'; contact: repository issues)';
 const photos = new Map<string,Promise<string|null>>();
 async function resolvePhoto(player:Player):Promise<string|null> {
   const title=encyclopedia[player.key];if(!title)return null;
-  const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),2500);
+  const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),7000);
   try {
+    // Retratos com licencas verificadas, armazenados no proprio repositorio.
+    // A API da Wikipedia nao e mais consultada para esses jogadores.
+    const photoAsset='https://raw.githubusercontent.com/c9bleblestro/futstancy/main/assets/portraits/'+encodeURIComponent(player.key)+'.jpg';
+    try {
+      const own=await fetch(photoAsset,{signal:ctrl.signal,headers:{Accept:'image/jpeg'}});
+      if(own.ok && (own.headers.get('content-type')??'').startsWith('image/jpeg')){
+        const bytes=new Uint8Array(await own.arrayBuffer());
+        if(bytes.byteLength>0 && bytes.byteLength<=150000){
+          let binary='';
+          for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
+          return 'data:image/jpeg;base64,'+btoa(binary);
+        }
+      }
+    }catch{ /* Fallback Wikimedia abaixo para fotos ainda ausentes. */ }
     const api=new URL('https://en.wikipedia.org/w/api.php');
     api.searchParams.set('action','query');api.searchParams.set('format','json');
     api.searchParams.set('prop','pageimages');api.searchParams.set('pithumbsize','240');api.searchParams.set('titles',title);
@@ -126,9 +140,21 @@ async function artCollection(u:URL):Promise<string>{
   const head=summaryTitle('MINHA COLEÇÃO','Todos os seus craques em uma única galeria',1180)
     +box(816,100,321,56,16,'#1e1538','#8045cb',2)
     +txt(840,137,`${total} CARTAS   •   PÁG. ${page}`,20,palette.gold,900);
-  const tiles=players.map((p,i)=>playerTile(p,47+(i%4)*286,187+Math.floor(i/4)*332,244,320,photos[i],i)).join('');
+  // Na ultima pagina (1 a 3 cartas), as cartas ficam maiores e centralizadas.
+  const short=players.length>0 && players.length<=3;
+  const tileW=short?312:244;
+  const tileH=short?412:320;
+  const gap=short?40:42;
+  const totalWidth=short?players.length*tileW+(players.length-1)*gap:0;
+  const margin=short?(1180-totalWidth)/2:47;
+  const tiles=players.map((p,i)=>{
+    const x=short?margin+i*(tileW+gap):47+(i%4)*286;
+    const y=short?200:187+Math.floor(i/4)*332;
+    return playerTile(p,x,y,tileW,tileH,photos[i],i);
+  }).join('');
   const rest=players.length?tiles:txt(590,420,'Sua coleção está vazia',40,'#fff',800,'middle');
-  return svg(1180,883,head+rest+stroke(40,854,1140,854,'#8d51dc',2,.7)+txt(590,873,'FUTSTANCY  •  COLECIONE  •  EVOLUA  •  VENÇA',13,palette.soft,700,'middle'));
+  const canvasHeight=short?690:883;
+  return svg(1180,canvasHeight,head+rest+stroke(40,canvasHeight-29,1140,canvasHeight-29,'#8d51dc',2,.7)+txt(590,canvasHeight-10,'FUTSTANCY  •  COLECIONE  •  EVOLUA  •  VENÇA',13,palette.soft,700,'middle'));
 }
 async function artMarket(u:URL):Promise<string>{
   const players=listPlayers(u).slice(0,8);const photos=await portraitSet(players);
