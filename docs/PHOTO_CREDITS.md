@@ -6,6 +6,8 @@ Cada imagem foi redimensionada e recortada. Consulte a licença do arquivo origi
 - **Alisson Becker** — Bryan Berlin; licença: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0); [arquivo original](https://commons.wikimedia.org/wiki/File:Alisson_Becker_Brazil_V_Morocco_13_June_2026-117_%28cropped%29.jpg). Alteração: redimensionamento/recorte.
 - **Ronald Araújo** — Werner100359; licença: [CC0](http://creativecommons.org/publicdomain/zero/1.0/deed.en); [arquivo original](https://commons.wikimedia.org/wiki/File:FC_Red_Bull_Salzburg_gegen_CF_Barcelona_%28Testspiel_4._August_2021%29_45_%28cropped%29.jpg). Alteração: redimensionamento/recorte.
 - **Jude Bellingham** — Bryan Berlin; licença: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0); [arquivo original](https://commons.wikimedia.org/wiki/File:Jude_Bellingham_England_v_Ghana_23_June_2026-061_%28cropped%29.jpg). Alteração: redimensionamento/recorte.
+- **Bento (footballer, born 1999)** — Fatemeh Amuzad/Ali Haddadi Asl; licença: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0); [arquivo original](https://commons.wikimedia.org/wiki/File:Esteghlal_F.C._v_Al_Nassr_FC%2C_3_March_2025_%28Bento_Matheus_Krepski%29.jpg). Alteração: redimensionamento/recorte.
+- **Bremer (footballer, born 1997)** — Bryan Berlin; licença: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0); [arquivo original](https://commons.wikimedia.org/wiki/File:Bremer_Brazil_V_Morocco_13_June_2026-143_%28cropped%29.jpg). Alteração: redimensionamento/recorte.
 - **Bruno Fernandes** — Bryan Berlin; licença: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0); [arquivo original](https://commons.wikimedia.org/wiki/File:Bruno_Fernandes_USMNT_v_Portugal_Mar_31_2026-27_%28cropped%29.jpg). Alteração: redimensionamento/recorte.
 - **Dani Carvajal** — Rolandhino1; licença: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0); [arquivo original](https://commons.wikimedia.org/wiki/File:UEFA_EURO_qualifiers_Sweden_vs_Spain_20191015_Dani_Carvajal_10_%28cropped%29.jpg). Alteração: redimensionamento/recorte.
 - **Casemiro** — Bryan Berlin; licença: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0); [arquivo original](https://commons.wikimedia.org/wiki/File:Casemiro_Brazil_V_Morocco_13_June_2026-76_%28cropped%29.jpg). Alteração: redimensionamento/recorte.
@@ -76,6 +78,26 @@ Cada imagem foi redimensionada e recortada. Consulte a licença do arquivo origi
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
     "key": "bellingham",
     "title": "Jude Bellingham",
+    "modification": "miniatura redimensionada e recortada para carta do Futstancy"
+  },
+  {
+    "file": "Esteghlal F.C. v Al Nassr FC, 3 March 2025 (Bento Matheus Krepski).jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Esteghlal_F.C._v_Al_Nassr_FC%2C_3_March_2025_%28Bento_Matheus_Krepski%29.jpg",
+    "artist": "Fatemeh Amuzad/Ali Haddadi Asl",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0",
+    "key": "bento",
+    "title": "Bento (footballer, born 1999)",
+    "modification": "miniatura redimensionada e recortada para carta do Futstancy"
+  },
+  {
+    "file": "Bremer Brazil V Morocco 13 June 2026-143 (cropped).jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Bremer_Brazil_V_Morocco_13_June_2026-143_%28cropped%29.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "key": "bremer",
+    "title": "Bremer (footballer, born 1997)",
     "modification": "miniatura redimensionada e recortada para carta do Futstancy"
   },
   {
