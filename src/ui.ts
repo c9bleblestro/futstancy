@@ -5,8 +5,13 @@ export const GOLD=0xf4c542;
 export const GREEN=0x22c55e;
 export const ERROR=0xef4444;
 export const V2=1<<15;
-const ROOT='https://futstancy.likeparaopeixe.workers.dev';
-
+/** Cards are compiled once into self-contained JPGs by GitHub Actions.
+ * Discord fetches images directly; no Worker image rendering or remote fonts.
+ */
+const ASSETS='https://raw.githubusercontent.com/c9bleblestro/futstancy/main/assets';
+const REV='fut-premium-20261121-v5';
+const cardUrl=(p:Player)=>ASSETS+'/cards/'+encodeURIComponent(p.key)+'.jpg?v='+REV;
+const bannerUrl=(kind:string)=>ASSETS+'/ui/'+kind+'.jpg?v='+REV;
 type Btn={label:string;id:string;style?:number;disabled?:boolean};
 export function button(label:string,id:string,style=2,disabled=false):Btn{return {label,id,style,disabled};}
 export function rows(buttons:Btn[]):object[]{
@@ -17,13 +22,7 @@ export function rows(buttons:Btn[]):object[]{
   return out;
 }
 const textDisplay=(content:string)=>({type:10,content});
-function url(path:string,params:Record<string,string>):string {
-  const qs=new URLSearchParams(params);
-  // Nova chave evita que o cache de imagens do Discord sirva os layouts antigos.
-  qs.set('v','4');
-  return ROOT+path+'?'+qs.toString();
-}
-/** Parse the game's own catalog names; NEVER use invented names/OVRs/prices in art. */
+/** Match precisely the real names and ordering from a game message. */
 function playersIn(content:string,limit:number):Player[]{
   const result:{player:Player;at:number}[]=[];
   for(const p of PLAYERS){
@@ -36,51 +35,48 @@ function playersIn(content:string,limit:number):Player[]{
   }
   return result.sort((a,b)=>a.at-b.at).slice(0,limit).map(r=>r.player);
 }
-function teamKeys(description:string):string[]{
-  const slots:string[]=[];
-  const lines=description.split('\n');
-  for(const line of lines){
+function teamPlayers(description:string):Player[]{
+  const players:Player[]=[];
+  for(const line of description.split('\n')){
     if(!/^\*\*\d+\.\s+[A-Z]+\*\*/.test(line))continue;
-    const player=PLAYERS.find(p=>line.includes(p.name));
-    slots.push(player?.key??'_');
+    const p=PLAYERS.find(p=>line.includes(p.name));
+    if(p)players.push(p);
   }
-  return slots.slice(0,11);
+  return players.slice(0,11);
 }
-function imageFor(title:string,description:string):string {
-  const t=title.toLowerCase();
-  const players=playersIn(description,10);
-  const keys=players.map(p=>p.key).join(',');
-  const banner=(head:string)=>url('/art/banner.png',{t:head.slice(0,30),s:'Futstancy • seu clube, sua história'});
-  if(t.includes('coleção')||t.includes('colecao')){
-    const count=description.match(/\*\*(\d+) cartas\*\*/)?.[1]??String(players.length);
-    const page=description.match(/Página\s+(\d+\/\d+)/)?.[1]??'1';
-    return url('/art/collection.png',{k:keys,total:count,page});
-  }
-  if(t.includes('mercado')){
-    const prices=[...description.matchAll(/\*\*([\d.]+) coins\*\*/g)].map(x=>x[1].replace(/\./g,''));
-    const codes=[...description.matchAll(/C[oó]digo:\s*`([^`]+)`/g)].map(x=>x[1]);
-    return url('/art/market.png',{k:players.slice(0,8).map(p=>p.key).join(','),prices:prices.slice(0,8).join(','),codes:codes.slice(0,8).join(',')});
-  }
-  if(t.includes('pacote aberto'))return url('/art/pack.png',{k:players.slice(0,3).map(p=>p.key).join(',')});
-  if(t.includes('contratado')||t.includes('transferência concluída')){
-    if(players[0])return url('/art/player.png',{k:players[0].key});
-  }
+function staticImages(title:string,description:string):string[]{
+  const t=title.toLocaleLowerCase('pt-BR');
+  const found=playersIn(description,11);
+  if(t.includes('coleção')||t.includes('colecao'))return found.length?found.slice(0,6).map(cardUrl):[bannerUrl('default')];
+  if(t.includes('mercado'))return found.length?found.slice(0,8).map(cardUrl):[bannerUrl('mercado')];
+  if(t.includes('pacote aberto'))return found.length?found.slice(0,3).map(cardUrl):[bannerUrl('pacote')];
+  if(t.includes('contratado')||t.includes('transferência concluída'))return found.length?[cardUrl(found[0])]:[bannerUrl('sucesso')];
   if(t.includes('equipe')||t.includes('seu time')){
-    const power=description.match(/Força total:\*\*?\s*(\d+)/)?.[1]??description.match(/Força total:[^\d]*(\d+)/)?.[1]??'--';
-    return url('/art/team.png',{k:teamKeys(description).join(','),power});
+    const lineup=teamPlayers(description);
+    return lineup.length?lineup.map(cardUrl):[bannerUrl('time')];
   }
-  if(t.includes('fim de jogo')||t.includes('resultado')){
-    const goals=description.match(/\*\*(\d+)\s*[×x]\s*(\d+)\*\*/);
-    return url('/art/score.png',{sh:goals?.[1]??'0',sa:goals?.[2]??'0'});
-  }
-  // All other commands, including every error/cooldown, receive a matching branded asset.
-  return banner(title||'FUTSTANCY');
+  if(t.includes('ranking'))return [bannerUrl('ranking')];
+  if(t.includes('perfil'))return [bannerUrl('perfil')];
+  if(t.includes('ajuda')||t.includes('guia'))return [bannerUrl('ajuda')];
+  if(t.includes('iniciar')||t.includes('clube'))return [bannerUrl('inicio')];
+  if(t.includes('daily')||t.includes('recompensa'))return [bannerUrl('daily')];
+  if(t.includes('desafio'))return [bannerUrl('desafio')];
+  if(t.includes('pacote'))return [bannerUrl('pacote')];
+  if(t.includes('aguarde')||t.includes('cooldown')||t.includes('indisponível'))return [bannerUrl('cooldown')];
+  if(t.includes('erro')||t.includes('falha')||t.includes('não realizada'))return [bannerUrl('erro')];
+  if(t.includes('concluída')||t.includes('anunciada')||t.includes('criado'))return [bannerUrl('sucesso')];
+  if(t.includes('fim de jogo')||t.includes('resultado'))return [bannerUrl('desafio')];
+  const lower=description.toLocaleLowerCase('pt-BR');
+  if(lower.includes('inválido')||lower.includes('não foi possível')||lower.includes('erro'))return [bannerUrl('erro')];
+  return [bannerUrl('default')];
 }
 export function buildComponents(title:string|undefined,description:string,buttons:object[]=[]):object[]{
-  const result:object[]=[textDisplay('-# ⚽ FUTSTANCY  •  O seu futebol começa aqui')];
-  if(title)result.push(textDisplay(`## ${title}`));
-  const image=imageFor(title??'',description);
-  result.push({type:12,items:[{media:{url:image},description:`Arte de ${title||'Futstancy'} gerada com dados do jogo`}]});
+  const result:object[]=[textDisplay('-# ⚽ FUTSTANCY • Sua história no futebol')];
+  if(title)result.push(textDisplay('## '+title));
+  const images=staticImages(title??'',description);
+  for(let i=0;i<images.length;i+=10){
+    result.push({type:12,items:images.slice(i,i+10).map((url,j)=>({media:{url},description:'Futstancy • carta '+(i+j+1)}))});
+  }
   result.push(textDisplay(description.slice(0,3300)));
   if(buttons.length)result.push({type:14,divider:true,spacing:1},...buttons);
   return result;
