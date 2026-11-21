@@ -28,10 +28,11 @@ test('mercado, time e pacote exibem retratos dos jogadores reais cadastrados',()
   assert.ok(team[0].includes('/assets/cards/alisson.jpg'));
   assert.ok(team[1].includes('/assets/cards/carvajal.jpg'));
   const pack=gallery('📦 Pacote aberto!','**Bento** · GOL · **76 OVR**\n**Bremer** · ZAG · **80 OVR**\n**Endrick** · ATA · **77 OVR**');
-  assert.equal(pack.length,3);
-  assert.ok(pack[0].includes('/assets/cards/bento.jpg'));
-  assert.ok(pack[1].includes('/assets/cards/bremer.jpg'));
-  assert.ok(pack[2].includes('/assets/cards/endrick.jpg'));
+  assert.equal(pack.length,1);
+  assert.ok(pack[0].includes('/assets/packs/bento_bremer_endrick.jpg'));
+  const other=gallery('📦 Pacote aberto!','**Kylian Mbappé** · ATA · **94 OVR**\n**Pedri** · MEI · **88 OVR**');
+  assert.equal(other.length,2);
+  assert.ok(other[0].includes('/assets/cards/mbappe.jpg'));
 });
 
 test('até onze jogadores no time geram galerias válidas com no máximo 10 itens',()=>{
