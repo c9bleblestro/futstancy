@@ -1,0 +1,36 @@
+name: Validar Futstancy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-check:
+    name: TypeScript, testes e Worker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Instalar dependencias
+        run: npm install --no-audit --no-fund
+
+      - name: Checar tipos
+        run: npm run typecheck
+
+      - name: Rodar testes
+        run: npm test
+
+      - name: Validar build Cloudflare sem publicar
+        run: npx wrangler deploy --dry-run --outdir ./dist
