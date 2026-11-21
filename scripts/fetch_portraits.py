@@ -98,10 +98,32 @@ def verified_license(filename):
     return {"file": filename, "source": file_url, "artist": artist or "ver página do arquivo",
             "license": license_name, "license_url": license_url or file_url}
 
+# Dois artigos não oferecem thumbnail, mas seus arquivos no Commons são licenciados.
+SPECIAL_FILES = {
+    "bento": "Esteghlal F.C. v Al Nassr FC, 3 March 2025 (Bento Matheus Krepski).jpg",
+    "bremer": "Bremer Brazil V Morocco 13 June 2026-143 (cropped).jpg",
+}
+
 def save_portrait(key, title):
     target = OUT / (key + ".jpg")
     if target.exists():
         return key, True, None
+    if key in SPECIAL_FILES:
+        try:
+            filename = SPECIAL_FILES[key]
+            attribution = verified_license(filename)
+            image_url = "https://commons.wikimedia.org/wiki/Special:FilePath/" + urllib.parse.quote(filename) + "?width=320"
+            photo = request(image_url, 1_800_000)
+            with Image.open(BytesIO(photo)) as im:
+                im = ImageOps.exif_transpose(im).convert("RGB")
+                im = ImageOps.fit(im, (250, 260), method=Image.Resampling.LANCZOS, centering=(0.5, 0.28))
+                im.save(target, format="JPEG", optimize=True, quality=82, progressive=True)
+            attribution["key"] = key
+            attribution["title"] = title
+            attribution["modification"] = "miniatura redimensionada e recortada para carta do Futstancy"
+            return key, True, attribution
+        except Exception as err:
+            print(f"[SPECIAL MISS] {key}: {type(err).__name__}: {err}", flush=True)
     errors = []
     for method in (api_thumbnail, summary_thumbnail, html_thumbnail):
         try:
