@@ -4,9 +4,11 @@ import { card, message, update, buildComponents, rows, button, V2 } from '../src
 import worker from '../src/index.ts';
 import { PLAYERS } from '../src/catalog.ts';
 
+const children=(list:any[]):any[]=>list.flatMap(x=>[x,...(Array.isArray(x.components)?children(x.components):[])]);
+
 const gallery=(title:string,description:string)=>{
   const list=buildComponents(title,description) as {type:number;items?:{media:{url:string}}[]}[];
-  return list.filter(c=>c.type===12).flatMap(c=>c.items??[]).map(i=>i.media.url);
+  return children(list).filter(c=>c.type===12).flatMap(c=>c.items??[]).map((i:any)=>i.media.url);
 };
 
 test('coleção envia fotos em cartas JPG estáticas; elimina imagens em branco do Worker',()=>{
@@ -38,7 +40,7 @@ test('mercado, time e pacote exibem retratos dos jogadores reais cadastrados',()
 test('até onze jogadores no time geram galerias válidas com no máximo 10 itens',()=>{
   const lines=PLAYERS.slice(0,11).map((p,i)=>'**'+(i+1)+'. '+p.pos+'** · '+p.name+' ('+p.ovr+' OVR)').join('\n');
   const comp=buildComponents('⚽ Sua equipe — 4-3-3',lines) as {type:number;items?:{media:{url:string}}[]}[];
-  const cards=comp.filter(c=>c.type===12);
+  const cards=children(comp).filter(c=>c.type===12);
   assert.equal(cards.length,2);
   assert.equal(cards[0].items?.length,10);
   assert.equal(cards[1].items?.length,1);
@@ -49,7 +51,8 @@ test('menus, falhas e recompensas continuam em Components V2 sem embeds',()=>{
     const data=response.data as {embeds?:unknown;content?:unknown;components:{type:number}[];flags?:number};
     assert.equal(data.embeds,undefined);
     assert.equal(data.content,undefined);
-    assert.equal(data.components.some(c=>c.type===12),true);
+    assert.equal(data.components[0].type,17);
+    assert.equal(children(data.components).some(c=>c.type===12),false); // Status não usam banners genéricos.
   }
   assert.equal((card('Teste','OK').data.flags&V2),V2);
   assert.equal(rows([button('Comprar','buy:123')]).length,1);
