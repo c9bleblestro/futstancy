@@ -1,5 +1,5 @@
-import { getPlayer, playerLabel, drawPlayer } from './catalog.ts';
-import { SLOT_POSITION, PACK_COST, timeRemaining, teamStrength } from './game.ts';
+import { getPlayer } from './catalog.ts';
+import { SLOT_POSITION, timeRemaining, teamStrength } from './game.ts';
 import { account, start, claim, daily, collectionPage, lineup, lineupPlayers, autoLineup, setSlot, createChallenge, resolveChallenge, openPack, marketPage, listCard, buyCard, cancelListing, leaderboard } from './storage.ts';
 import { card, message, update, rows, button, GOLD, GREEN, ERROR, PURPLE } from './ui.ts';
 import { SHOWCASE, type GalleryKind } from './editions.ts';
@@ -135,15 +135,34 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
   if (i.type === 3) {
     const id = i.data?.custom_id ?? '';
     if (id.startsWith('col:')) {
-      const [, owner, page] = id.split(':');
-      if (uid !== owner) return message('Essa coleção pertence a outro jogador.', true);
-      return showCollection(env, uid, Number(page) || 0);
+      const [,owner,part3,part4]=id.split(':');
+      if(uid!==owner)return message('Essa coleção pertence a outro jogador.',true);
+      const tier=part4===undefined?'todas':part3;
+      const page=Number(part4===undefined?part3:part4);
+      if(!isCollectionTier(tier))return message('Filtro de raridade inválido.',true);
+      return showCollection(env,uid,Number.isFinite(page)?page:0,tier);
     }
-    if (id.startsWith('art:')) {
-      const [,owner,kindRaw,pageStr]=id.split(':');
+    if(id.startsWith('art:')) {
+      const [,owner,kind,part4,part5]=id.split(':');
       if(uid!==owner)return message('Esta galeria pertence a outro jogador.',true);
-      if(kindRaw!=='cards'&&kindRaw!=='designs')return message('Categoria inválida.',true);
-      return showGallery(uid,Number(pageStr),kindRaw);
+      if(kind!=='cards'&&kind!=='designs')return message('Categoria inválida.',true);
+      const tier=part5===undefined?'todas':part4;
+      const page=Number(part5===undefined?part4:part5);
+      return showGallery(uid,Number.isFinite(page)?page:0,kind,tier);
+    }
+    if(id.startsWith('pack:')) {
+      const [,owner,type]=id.split(':');
+      if(owner!==uid)return message('Esta loja pertence a outro jogador.',true);
+      if(!isPackType(type))return message('Pacote inválido.',true);
+      if(!await account(env.DB,uid))return needStart();
+      const result=await openPack(env.DB,uid,type);
+      if(!result.ok)return message('Saldo insuficiente. O pacote '+PACKS[type].label+' custa '+PACKS[type].cost.toLocaleString('pt-BR')+' coins.',true);
+      return showOpenedPack(type,result);
+    }
+    if(id.startsWith('mkt:')) {
+      const tier=id.slice(4);
+      if(!isCollectionTier(tier))return message('Filtro inválido.',true);
+      return showMarket(env,tier);
     }
     if (id.startsWith('auto:')) {
       if (uid !== id.slice(5)) return message('Esse time não é seu.', true);
@@ -184,7 +203,7 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
     const out = top.map((a, n) => `**${n + 1}º** ${tag(a.user_id)} — **${a.wins * 3 + a.draws} pts** (${a.wins}V/${a.draws}E/${a.losses}D)`).join('\n');
     return card('🏆 Ranking global de clubes', out || 'Ninguém jogou ainda. Seja o primeiro!', GOLD, false);
   }
-  if (action === 'mercado') return showMarket(env);
+  if (action === 'mercado') return showMarket(env,String(getOption(args,'raridade')??'todas'));
 
   const me = await account(env.DB, uid);
   if (!me) return needStart();
@@ -193,23 +212,32 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
     const games = me.wins + me.draws + me.losses;
     return card('🪪 Seu perfil de treinador', `${tag(uid)}\n\n🪙 **${me.coins.toLocaleString('pt-BR')} coins**\n⚔️ Partidas: **${games}**\n🏆 Vitórias: **${me.wins}**\n🤝 Empates: **${me.draws}**\n❌ Derrotas: **${me.losses}**\n⚽ Gols: **${me.goals_for}** feitos · **${me.goals_against}** sofridos\n📊 Pontos: **${me.wins * 3 + me.draws}**`);
   }
-  if (action === 'obter') {
-    const player = drawPlayer();
-    const result = await claim(env.DB, uid, player);
-    return result.ok ? card('🎁 Jogador contratado!', `${playerLabel(player)}\n🌍 ${player.country}\n🆔 ID da carta: \`${result.cardId}\`\n\nPróxima carta em **25 minutos**.`, player.ovr >= 90 ? GOLD : PURPLE, false)
-      : card('⏳ Aguarde para obter outra carta', `Faltam **${timeRemaining(result.left)}** para o próximo jogador.`, ERROR);
+  if(action==='obter') {
+    const drop=drawEdition('misto');
+    const result=await claim(env.DB,uid,drop.player,drop.edition);
+    return result.ok
+      ? card('🎁 Jogador contratado!','**'+drop.player.name+'** · '+drop.player.pos+' · '+drop.player.ovr+' OVR\n'+
+          '**'+TIER_NAMES[drop.tier]+'** · Edição: '+drop.edition.replace(/_/g,' ')+
+          '\n🌍 '+drop.player.country+'\n🆔 ID: '+String.fromCharCode(96)+result.cardId+String.fromCharCode(96)+
+          '\n\nPróxima carta em **25 minutos**.',GOLD,false,[],[editionArtUrl(drop.player.key,drop.edition)])
+      : card('⏳ Aguarde para obter outra carta','Faltam **'+timeRemaining(result.left)+'** para o próximo jogador.',ERROR);
   }
   if (action === 'daily') {
     const result = await daily(env.DB, uid);
     return result.ok ? card('💰 Recompensa diária!', `Você ganhou **350 coins**!\nSaldo: **${result.coins.toLocaleString('pt-BR')}** coins`, GOLD, false)
       : card('⏳ Daily indisponível', `Volte em **${timeRemaining(result.left)}**. Seu saldo: **${result.coins.toLocaleString('pt-BR')} coins**.`);
   }
-  if (action === 'pacote') {
-    const result = await openPack(env.DB, uid);
-    return result.ok ? card('📦 Pacote aberto!', `Você gastou **${PACK_COST} coins** e recebeu:\n\n${result.players.map(p => playerLabel(p)).join('\n')}\n\nVeja seus IDs em **/fut colecao**.`, GOLD, false)
-      : card('💸 Saldo insuficiente', `Você precisa de **${PACK_COST} coins**. Use **/fut daily** ou ganhe partidas.`, ERROR);
+  if(action==='pacote') {
+    const requested=getOption(args,'tipo');
+    if(requested===undefined)return showPacks(uid,me.coins);
+    const type=String(requested);
+    if(!isPackType(type))return message('Tipo de pacote inválido.',true);
+    const result=await openPack(env.DB,uid,type);
+    return result.ok?showOpenedPack(type,result):
+      card('💸 Saldo insuficiente','Pacote '+PACKS[type].label+': **'+PACKS[type].cost.toLocaleString('pt-BR')+
+        ' coins** necessários.\nUse **/fut daily** ou jogue partidas.',ERROR);
   }
-  if (action === 'colecao') return showCollection(env, uid, 0);
+  if(action==='colecao')return showCollection(env,uid,0,String(getOption(args,'raridade')??'todas'));
   if (action === 'time') return showTeam(env, uid);
   if (action === 'auto') {
     const success = await autoLineup(env.DB, uid);
@@ -255,6 +283,9 @@ async function handleBuy(env: Env, uid: string, id: string) {
   if (!await account(env.DB, uid)) return needStart();
   const result = await buyCard(env.DB, uid, id);
   return result.ok
-    ? card('✅ Transferência concluída!', `Você contratou **${result.player?.name ?? 'jogador'}** por **${result.price?.toLocaleString('pt-BR')} coins**!\nA carta entrou na sua coleção.`, GREEN)
-    : card('❌ Compra não realizada', 'Confira seu saldo, se o anúncio ainda está disponível e se você não está tentando comprar sua própria carta.', ERROR);
+    ? card('✅ Transferência concluída!',
+        'Você contratou **'+(result.player?.name??'jogador')+'** · '+(TIER_NAMES[result.tier??'legado']??'Clássica')+
+        ' por **'+result.price?.toLocaleString('pt-BR')+' coins**!\nA carta manteve sua edição original e entrou na coleção.',
+        GREEN,true,[],result.player?[editionArtUrl(result.player.key,result.edition??'legado')]:[])
+    : card('❌ Compra não realizada','Confira o saldo, se o anúncio ainda existe e se a carta não é sua.',ERROR);
 }
