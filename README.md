@@ -5,6 +5,16 @@ Não precisa de computador ligado, processo Discord Gateway ou Railway. O Worker
 
 > Estado do projeto: **MVP funcional de código**, pronto para configurar e publicar. Ainda não está conectado a um aplicativo Discord nem implantado na Cloudflare. Não inclua tokens em arquivos versionados.
 
+## 📦 V5 — Loja de pacotes por raridade
+
+A biblioteca inclui **75 artes** (53 completas jogáveis e 22 prévias); as artes completas alimentam os pacotes **Comum (450), Prata (900), Ouro (2.100), Ícone (4.500), Lendário (8.500), Eclipse (12.500)** e **Misto (900)**, sempre com 3 cartas. Todos os valores em coins.
+
+No Misto, as chances por carta são: **55% Comum, 22% Prata, 12% Ouro, 7% Ícone, 3% Lendário e 1% Eclipse**. Pacotes específicos garantem sua raridade. Artes Premium (recortadas) não são sorteadas. Cartas repetidas podem vir.
+
+Use `/fut pacote` para ver a loja, `/fut pacote tipo:...` para comprar diretamente, `/fut colecao raridade:...` para filtrar seu inventário e `/fut artes` para navegar pelos lotes separados por raridade.
+
+**Migração obrigatória:** antes de implantar o Worker V5, aplique `migrations/0002_card_editions.sql` no banco D1 (por exemplo via `npm run db:remote`). As cartas antigas mantêm os mesmos IDs, donos e saldos, sendo marcadas com raridade/edição `legado`. Não implante o Worker novo antes da migração.
+
 ## O que existe na primeira versão
 
 | Comando | Funcionalidade |
@@ -12,8 +22,8 @@ Não precisa de computador ligado, processo Discord Gateway ou Railway. O Worker
 | `/fut iniciar` | Cria clube e entrega **11 titulares** e 1.500 coins |
 | `/fut obter` | Ganha uma carta aleatória a cada **25 minutos** |
 | `/fut daily` | Resgata **350 coins** a cada **20 horas** |
-| `/fut pacote` | Compra **3 cartas por 900 coins** |
-| `/fut colecao` | Inventário paginado com IDs únicos e raridades |
+| `/fut pacote` | Loja de **7 pacotes** (Misto + 6 raridades), com 3 cartas por abertura |
+| `/fut colecao` | Inventário com filtro de raridade, edições persistentes e IDs próprios |
 | `/fut time` | Equipe 4-3-3, posição por posição e overall |
 | `/fut auto` | Escala automaticamente os melhores jogadores por posição |
 | `/fut escalar` | Troca manualmente um titular usando ID e posição |
@@ -26,7 +36,7 @@ Não precisa de computador ligado, processo Discord Gateway ou Railway. O Worker
 | `/fut cancelar` | Retira anúncio próprio, sem custo |
 | `/fut ajuda` | Guia do bot |
 
-São **44 atletas** no catálogo inicial, com OVR **inventado exclusivamente para este jogo**. O design das cartas nesta versão é textual, usando embeds e botões do Discord — nenhuma arte de FUT/EA/Futecord foi copiada. O catálogo poderá receber cartas originais ilustradas em uma versão seguinte.
+São **60 atletas** no catálogo, com OVR **inventado exclusivamente para este jogo**. A V5 usa imagens completas próprias, armazenando a edição e a raridade em cada carta. Os recortes são exibidos somente na galeria; a interface utiliza Components V2.
 
 As coleções, moedas, resultados e transferências ficam no Cloudflare D1, compartilhados pelos servidores onde o bot for instalado.
 
