@@ -97,3 +97,46 @@ test('desafio aceita uma única vez, registra gols, resultados e coins', async (
   assert.equal(lineupPlayers(await lineup(db, 'player-b'))?.length, 11);
   db.client.close();
 });
+
+
+test('pacotes comuns geram 3 cartas com edição persistente e custo correto',async()=>{
+  const db=new SqlDB();
+  await start(db,'alice');
+  const opened=await openPack(db,'alice','comum');
+  assert.equal(opened.ok,true);
+  assert.equal(opened.cards.length,3);
+  assert.equal(opened.cost,450);
+  assert.ok(opened.cards.every(c=>c.tier==='comum'&&c.edition.startsWith('comum')));
+  const collection=await ownedCards(db,'alice');
+  assert.equal(collection.length,14);
+  for(const acquired of opened.cards){
+    const saved=collection.find(c=>c.id===acquired.id)!;
+    assert.equal(saved.edition,acquired.edition);
+    assert.equal(saved.tier,acquired.tier);
+  }
+  assert.equal((await account(db,'alice'))?.coins,1050);
+  assert.equal((await openPack(db,'alice','eclipse')).ok,false);
+  assert.equal((await ownedCards(db,'alice')).length,14);
+  db.client.close();
+});
+
+test('cartas antigas sobrevivem e cada edição permanece após transferência',async()=>{
+  const db=new SqlDB();
+  await start(db,'seller');await start(db,'buyer');
+  const old=await ownedCards(db,'seller');
+  assert.equal(old.length,11);
+  assert.ok(old.every(c=>c.edition==='legado'&&c.tier==='legado'));
+  const opened=await openPack(db,'seller','prata');
+  assert.equal(opened.ok,true);
+  const acquired=opened.cards[0];
+  const listed=await listCard(db,'seller',acquired.id,1000);
+  assert.equal(listed.ok,true);
+  const bought=await buyCard(db,'buyer',listed.id!);
+  assert.equal(bought.ok,true);
+  assert.equal(bought.edition,acquired.edition);
+  assert.equal(bought.tier,'prata');
+  const buyerCard=(await ownedCards(db,'buyer')).find(c=>c.id===acquired.id)!;
+  assert.equal(buyerCard.edition,acquired.edition);
+  assert.equal(buyerCard.tier,'prata');
+  db.client.close();
+});
