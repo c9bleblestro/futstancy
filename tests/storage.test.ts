@@ -12,6 +12,7 @@ class SqlDB implements Database {
   constructor() {
     this.client.exec('PRAGMA foreign_keys = ON');
     this.client.exec(readFileSync(join(import.meta.dirname, '../migrations/0001_init.sql'), 'utf8'));
+    this.client.exec(readFileSync(join(import.meta.dirname, '../migrations/0002_card_editions.sql'), 'utf8'));
   }
   prepare(sql: string): Statement {
     const stmt = this.client.prepare(sql);

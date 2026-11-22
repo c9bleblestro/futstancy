@@ -79,10 +79,10 @@ function staticImages(title:string,description:string):string[]{
   if(lower.includes('inválido')||lower.includes('não foi possível')||lower.includes('erro'))return [bannerUrl('erro')];
   return [bannerUrl('default')];
 }
-export function buildComponents(title:string|undefined,description:string,buttons:object[]=[]):object[]{
+export function buildComponents(title:string|undefined,description:string,buttons:object[]=[],imageUrls?:string[]):object[]{
   const result:object[]=[textDisplay('-# ⚽ FUTSTANCY • Sua história no futebol')];
   if(title)result.push(textDisplay('## '+title));
-  const images=staticImages(title??'',description);
+  const images=imageUrls ?? staticImages(title??'',description);
   for(let i=0;i<images.length;i+=10){
     result.push({type:12,items:images.slice(i,i+10).map((url,j)=>({media:{url},description:'Futstancy • carta '+(i+j+1)}))});
   }
@@ -93,11 +93,11 @@ export function buildComponents(title:string|undefined,description:string,button
 export function message(content:string,ephemeral=true,buttons:object[]=[]){
   return {type:4,data:{flags:V2|(ephemeral?64:0),components:buildComponents(undefined,content,buttons),allowed_mentions:{parse:[]}}};
 }
-export function card(title:string,description:string,_color=PURPLE,ephemeral=true,buttons:object[]=[]){
-  return {type:4,data:{flags:V2|(ephemeral?64:0),components:buildComponents(title,description,buttons),allowed_mentions:{parse:[]}}};
+export function card(title:string,description:string,_color=PURPLE,ephemeral=true,buttons:object[]=[],imageUrls?:string[]){
+  return {type:4,data:{flags:V2|(ephemeral?64:0),components:buildComponents(title,description,buttons,imageUrls),allowed_mentions:{parse:[]}}};
 }
-export function update(title:string,description:string,_color=PURPLE){
-  return {type:7,data:{components:buildComponents(title,description),allowed_mentions:{parse:[]}}};
+export function update(title:string,description:string,_color=PURPLE,imageUrls?:string[]){
+  return {type:7,data:{components:buildComponents(title,description,[],imageUrls),allowed_mentions:{parse:[]}}};
 }
 export function jsonResponse(value:object,status=200):Response{
   return new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
