@@ -14,6 +14,7 @@ export interface Env {
   DISCORD_PUBLIC_KEY: string;
   DISCORD_APPLICATION_ID?: string;
   DISCORD_BOT_TOKEN?: string;
+  PREFIX_GATEWAY_SECRET?: string;
 }
 export interface Option {
   name: string;
