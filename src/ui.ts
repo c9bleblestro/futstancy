@@ -104,8 +104,9 @@ export function visualTheme(title:string|undefined,content=''):Theme {
   if(/guia|ajuda/.test(t))return {label:'CENTRAL DO TREINADOR',color:PURPLE};
   if(/perfil|treinador/.test(t))return {label:'IDENTIDADE DO CLUBE',color:PURPLE};
   if(/daily|moeda|coins/.test(t))return {label:'ECONOMIA DO CLUBE',color:GOLD};
-  if(!title&&/❌|erro|inválid|não foi possível/.test(d))return {label:'AVISO',color:ERROR};
-  return {label:'FOOTBALL CLUB',color:PURPLE};
+  if(!title&&/❌|erro|inválid|não foi possível|faltam jogadores/.test(d))return {label:'AVISO',color:ERROR};
+  if(!title&&/✅|concluído|escalado|cancelado/.test(d))return {label:'OPERAÇÃO CONCLUÍDA',color:GREEN};
+  return {label:'CENTRAL DO CLUBE',color:PURPLE};
 }
 
 type Node = {type:number;[key:string]:unknown};
