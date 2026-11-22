@@ -3,7 +3,7 @@ const str = (name: string, description: string) => ({ type: 3, name, description
 const int = (name: string, description: string, min = 1, max = 200000) => ({ type: 4, name, description, required: true, min_value: min, max_value: max });
 const user = (name: string, description: string) => ({ type: 6, name, description, required: true });
 
-export const COMMAND_VERSION = 'v1.0.0-futstancy';
+export const COMMAND_VERSION = 'v1.1.0-futstancy-artes';
 export const COMMANDS = [{
   name: 'fut',
   description: '⚽ Futstancy — seu clube de futebol no Discord',
@@ -17,6 +17,7 @@ export const COMMANDS = [{
     sub('daily', 'Receba sua recompensa de moedas.'),
     sub('pacote', 'Abra um pacote com 3 jogadores por 900 coins.'),
     sub('colecao', 'Veja suas cartas com paginação.'),
+    sub('artes', 'Veja todos os lotes e conceitos visuais do Futstancy.'),
     sub('time', 'Veja sua escalação 4-3-3 e força do elenco.'),
     sub('auto', 'Monte o melhor time automaticamente.'),
     sub('escalar', 'Escale uma carta em uma das 11 vagas.', [str('id', 'ID da carta em /fut colecao'), int('vaga', '1=GOL; 2–5=ZAG; 6–8=MEI; 9–11=ATA', 1, 11)]),

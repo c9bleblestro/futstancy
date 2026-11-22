@@ -20,6 +20,6 @@ test('cartas e menus de mercado exibem cartas JPG pré-geradas com botões funci
   const gallery=components.find(c=>c.type===12);
   assert.ok(gallery);
   assert.equal(gallery?.items?.length,1);
-  assert.match(gallery!.items![0].media.url,/\/assets\/cards\/vinicius\.jpg\?v=fut-premium-20261121-v6$/);
+  assert.ok(gallery!.items![0].media.url.includes('/assets/editions/vinicius/icone.jpg?v=futstancy-v4-20261122'));
   assert.ok(components.some(c=>c.type===1));
 });

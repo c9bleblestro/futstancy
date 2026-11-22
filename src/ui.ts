@@ -1,4 +1,5 @@
 import { PLAYERS, type Player } from './catalog.ts';
+import { playerArtUrl, galleryUrls } from './editions.ts';
 
 export const PURPLE=0x9d52ff;
 export const GOLD=0xf4c542;
@@ -9,8 +10,8 @@ export const V2=1<<15;
  * Discord fetches images directly; no Worker image rendering or remote fonts.
  */
 const ASSETS='https://raw.githubusercontent.com/c9bleblestro/futstancy/main/assets';
-const REV='fut-premium-20261121-v6';
-const cardUrl=(p:Player)=>ASSETS+'/cards/'+encodeURIComponent(p.key)+'.jpg?v='+REV;
+const REV='futstancy-v4-20261122';
+const cardUrl=(p:Player,index=0)=>playerArtUrl(p,index);
 const bannerUrl=(kind:string)=>ASSETS+'/ui/'+kind+'.jpg?v='+REV;
 type Btn={label:string;id:string;style?:number;disabled?:boolean};
 export function button(label:string,id:string,style=2,disabled=false):Btn{return {label,id,style,disabled};}
@@ -47,17 +48,21 @@ function teamPlayers(description:string):Player[]{
 function staticImages(title:string,description:string):string[]{
   const t=title.toLocaleLowerCase('pt-BR');
   const found=playersIn(description,11);
-  if(t.includes('coleção')||t.includes('colecao'))return found.length?found.slice(0,6).map(cardUrl):[bannerUrl('default')];
-  if(t.includes('mercado'))return found.length?found.slice(0,8).map(cardUrl):[bannerUrl('mercado')];
+  if(t.includes('galeria de artes')){
+    const page=t.match(/(\d+)\s*\/\s*\d+/);
+    return galleryUrls(t.includes('designs')?'designs':'cards',page?Number(page[1])-1:0);
+  }
+  if(t.includes('coleção')||t.includes('colecao'))return found.length?found.slice(0,6).map((p,i)=>cardUrl(p,i)):[bannerUrl('default')];
+  if(t.includes('mercado'))return found.length?found.slice(0,8).map((p,i)=>cardUrl(p,i)):[bannerUrl('mercado')];
   if(t.includes('pacote aberto')){
     const keys=found.slice(0,3).map(p=>p.key).join(',');
     if(keys==='bento,bremer,endrick')return [ASSETS+'/packs/bento_bremer_endrick.jpg?v='+REV];
-    return found.length?found.slice(0,3).map(cardUrl):[bannerUrl('pacote')];
+    return found.length?found.slice(0,3).map((p,i)=>cardUrl(p,i)):[bannerUrl('pacote')];
   }
   if(t.includes('contratado')||t.includes('transferência concluída'))return found.length?[cardUrl(found[0])]:[bannerUrl('sucesso')];
   if(t.includes('equipe')||t.includes('seu time')){
     const lineup=teamPlayers(description);
-    return lineup.length?lineup.map(cardUrl):[bannerUrl('time')];
+    return lineup.length?lineup.map((p,i)=>cardUrl(p,i)):[bannerUrl('time')];
   }
   if(t.includes('ranking'))return [bannerUrl('ranking')];
   if(t.includes('perfil'))return [bannerUrl('perfil')];

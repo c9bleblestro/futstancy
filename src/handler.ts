@@ -2,6 +2,7 @@ import { getPlayer, playerLabel, drawPlayer } from './catalog.ts';
 import { SLOT_POSITION, PACK_COST, timeRemaining, teamStrength } from './game.ts';
 import { account, start, claim, daily, collectionPage, lineup, lineupPlayers, autoLineup, setSlot, createChallenge, resolveChallenge, openPack, marketPage, listCard, buyCard, cancelListing, leaderboard } from './storage.ts';
 import { card, message, update, rows, button, GOLD, GREEN, ERROR, PURPLE } from './ui.ts';
+import { galleryPages, type GalleryKind } from './editions.ts';
 import type { Env, Interaction, Option } from './types.ts';
 
 const help = [
@@ -10,6 +11,7 @@ const help = [
   '💰 **/fut daily** — 350 coins a cada 20h',
   '📦 **/fut pacote** — 3 cartas por 900 coins',
   '🗂️ **/fut colecao** — cartas e seus IDs',
+  '🎨 **/fut artes** — biblioteca de todos os lotes e designs',
   '📋 **/fut time** — escalação titular 4-3-3',
   '⚙️ **/fut auto** — melhor escalação automática',
   '🔄 **/fut escalar** — trocar um titular pelo ID',
@@ -27,6 +29,20 @@ function getOption(options: Option[], name: string): string | number | undefined
 function actorId(i: Interaction): string | null { return i.member?.user?.id ?? i.user?.id ?? null; }
 const tag = (id: string) => `<@${id}>`;
 const needStart = () => card('⚽ Primeiro, crie seu clube', 'Use **/fut iniciar** para receber seus 11 jogadores e começar com 1.500 coins.');
+
+function showGallery(owner:string,page:number,kind:GalleryKind) {
+  const pages=galleryPages(kind);
+  const safe=Math.min(Math.max(0,Math.trunc(page)||0),pages-1);
+  const title='🎨 Galeria de artes — '+(kind==='cards'?'Cartas':'Designs')+' '+(safe+1)+'/'+pages;
+  const info=kind==='cards'
+    ? 'Versões alternativas e edições especiais do Futstancy. Algumas são recortes de prévia; cartas oficiais do jogo usam somente imagens completas e os atributos reais do catálogo.'
+    : 'Conceitos visuais de coleção, mercado, escalação, pacotes e eventos. Os valores mostrados nas prévias são ILUSTRATIVOS, não seu saldo ou resultados reais.';
+  return card(title,info,PURPLE,true,rows([
+    button('◀ Anterior',`art:${owner}:${kind}:${safe-1}`,2,safe===0),
+    button('Próxima ▶',`art:${owner}:${kind}:${safe+1}`,1,safe===pages-1),
+    button(kind==='cards'?'Ver designs':'Ver cartas',`art:${owner}:${kind==='cards'?'designs':'cards'}:0`,2)
+  ]));
+}
 
 async function showCollection(env: Env, owner: string, page: number) {
   const data = await collectionPage(env.DB, owner, page);
@@ -76,6 +92,12 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
       if (uid !== owner) return message('Essa coleção pertence a outro jogador.', true);
       return showCollection(env, uid, Number(page) || 0);
     }
+    if (id.startsWith('art:')) {
+      const [,owner,kindRaw,pageStr]=id.split(':');
+      if(uid!==owner)return message('Esta galeria pertence a outro jogador.',true);
+      if(kindRaw!=='cards'&&kindRaw!=='designs')return message('Categoria inválida.',true);
+      return showGallery(uid,Number(pageStr),kindRaw);
+    }
     if (id.startsWith('auto:')) {
       if (uid !== id.slice(5)) return message('Esse time não é seu.', true);
       const ok = await autoLineup(env.DB, uid);
@@ -109,6 +131,7 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
       ? card('🎉 Seu clube nasceu!', 'Você recebeu **11 jogadores titulares**, a formação **4-3-3** e **1.500 coins**!\n\nUse **/fut time** para conhecer o elenco e **/fut obter** para ganhar sua próxima carta.', GREEN, false)
       : card('⚽ Clube já criado', 'Você já tem um clube. Use **/fut time**, **/fut colecao** ou **/fut perfil** para continuar.');
   }
+  if (action === 'artes') return showGallery(uid,0,'cards');
   if (action === 'ranking') {
     const top = await leaderboard(env.DB);
     const out = top.map((a, n) => `**${n + 1}º** ${tag(a.user_id)} — **${a.wins * 3 + a.draws} pts** (${a.wins}V/${a.draws}E/${a.losses}D)`).join('\n');
