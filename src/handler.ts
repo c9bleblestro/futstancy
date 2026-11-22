@@ -1,4 +1,5 @@
 import { getPlayer } from './catalog.ts';
+import { COMMAND_ROOT } from './commands.ts';
 import { SLOT_POSITION, timeRemaining, teamStrength } from './game.ts';
 import { account, start, claim, daily, collectionPage, lineup, lineupPlayers, autoLineup, setSlot, createChallenge, resolveChallenge, openPack, marketPage, listCard, buyCard, cancelListing, leaderboard } from './storage.ts';
 import { card, message, update, rows, button, GOLD, GREEN, ERROR, PURPLE } from './ui.ts';
@@ -7,21 +8,21 @@ import { PACKS, PACK_TYPES, PACK_ODDS, TIER_NAMES, GALLERY_TIERS, drawEdition, e
 import type { Env, Interaction, Option } from './types.ts';
 
 const help = [
-  '🎟️ **/fut iniciar** — clube + 11 jogadores iniciais',
-  '🎁 **/fut obter** — carta grátis a cada 25 min',
-  '💰 **/fut daily** — 350 coins a cada 20h',
-  '📦 **/fut pacote** — loja de pacotes por raridade',
-  '🗂️ **/fut colecao** — cartas com filtros de raridade',
-  '🎨 **/fut artes** — biblioteca de todos os lotes e designs',
-  '📋 **/fut time** — escalação titular 4-3-3',
-  '⚙️ **/fut auto** — melhor escalação automática',
-  '🔄 **/fut escalar** — trocar um titular pelo ID',
-  '⚔️ **/fut desafiar** — partida com outro membro',
-  '🛒 **/fut mercado** — jogadores à venda',
-  '🏷️ **/fut vender** — anuncie carta fora do time',
-  '🪙 **/fut comprar** — compre pelo código',
-  '🚫 **/fut cancelar** — retire seu anúncio',
-  '🏆 **/fut ranking** / **/fut perfil** — resultados',
+  '🎟️ **/s iniciar** — clube + 11 jogadores iniciais',
+  '🎁 **/s obter** — carta grátis a cada 25 min',
+  '💰 **/s daily** — 350 coins a cada 20h',
+  '📦 **/s pacote** — loja de pacotes por raridade',
+  '🗂️ **/s colecao** — cartas com filtros de raridade',
+  '🎨 **/s artes** — biblioteca de todos os lotes e designs',
+  '📋 **/s time** — escalação titular 4-3-3',
+  '⚙️ **/s auto** — melhor escalação automática',
+  '🔄 **/s escalar** — trocar um titular pelo ID',
+  '⚔️ **/s desafiar** — partida com outro membro',
+  '🛒 **/s mercado** — jogadores à venda',
+  '🏷️ **/s vender** — anuncie carta fora do time',
+  '🪙 **/s comprar** — compre pelo código',
+  '🚫 **/s cancelar** — retire seu anúncio',
+  '🏆 **/s ranking** / **/s perfil** — resultados',
 ].join('\n');
 
 function getOption(options: Option[], name: string): string | number | undefined {
@@ -29,7 +30,7 @@ function getOption(options: Option[], name: string): string | number | undefined
 }
 function actorId(i: Interaction): string | null { return i.member?.user?.id ?? i.user?.id ?? null; }
 const tag = (id: string) => `<@${id}>`;
-const needStart = () => card('⚽ Primeiro, crie seu clube', 'Use **/fut iniciar** para receber seus 11 jogadores e começar com 1.500 coins.');
+const needStart = () => card('⚽ Primeiro, crie seu clube', 'Use **/s iniciar** para receber seus 11 jogadores e começar com 1.500 coins.');
 
 const COLLECTION_FILTERS=['todas','comum','prata','ouro','icone','lendario','eclipse','legado'] as const;
 const isCollectionTier=(value:string):boolean=>COLLECTION_FILTERS.includes(value as typeof COLLECTION_FILTERS[number]);
@@ -83,7 +84,7 @@ async function showTeam(env:Env,owner:string) {
     return '**'+(index+1)+'. '+pos+'** · '+(p?p.name+' ('+p.ovr+' OVR) · '+(TIER_NAMES[c?.tier??'legado']??'Clássica'):'Vaga vazia');
   });
   const description=lines.join('\n')+'\n\n**Força total:** '+(players?teamStrength(players)+' OVR':'Incompleta')+
-    '\n\nTroque titulares com **/fut escalar** ou use a autoescalação.';
+    '\n\nTroque titulares com **/s escalar** ou use a autoescalação.';
   return card('⚽ Sua equipe — 4-3-3',description,PURPLE,true,rows([button('⚙️ Autoescalar','auto:'+owner,1)]),
     [...all].sort((a,b)=>a.slot-b.slot).map(c=>editionArtUrl(c.player_key,c.edition)).filter(Boolean));
 }
@@ -93,14 +94,14 @@ async function showMarket(env:Env,tier='todas') {
   const listings=await marketPage(env.DB,selected);
   const filters=COLLECTION_FILTERS.map(t=>button(TIER_NAMES[t],'mkt:'+t));
   if(!listings.length)return card('🛒 Mercado · '+TIER_NAMES[selected],
-    'Nenhuma carta anunciada nesta raridade. Use **/fut vender** para anunciar uma carta.',GOLD,false,rows(filters),[]);
+    'Nenhuma carta anunciada nesta raridade. Use **/s vender** para anunciar uma carta.',GOLD,false,rows(filters),[]);
   const content=listings.map((l,i)=>{
     const p=getPlayer(l.player_key);
     return '**'+(i+1)+'.** '+(p?p.name+' · '+p.ovr+' OVR':'Jogador')+' · **'+(TIER_NAMES[l.tier]??l.tier)+
       '**\n💰 **'+l.price.toLocaleString('pt-BR')+' coins** · Código: '+String.fromCharCode(96)+l.id+String.fromCharCode(96);
   }).join('\n\n');
   return card('🛒 Mercado · '+TIER_NAMES[selected],
-    content+'\n\nUse **Comprar** ou **/fut comprar**. Taxa de 5% cobrada do vendedor.',
+    content+'\n\nUse **Comprar** ou **/s comprar**. Taxa de 5% cobrada do vendedor.',
     GOLD,false,rows([...listings.map((l,i)=>button('Comprar '+(i+1),'buy:'+l.id,3)),...filters]),
     listings.map(l=>editionArtUrl(l.player_key,l.edition)).filter(Boolean));
 }
@@ -124,7 +125,7 @@ function showOpenedPack(type:PackType,result:Awaited<ReturnType<typeof openPack>
     '\n  Edição: '+c.edition.replace(/_/g,' ')+' · ID: '+String.fromCharCode(96)+c.id+String.fromCharCode(96));
   return card('📦 '+PACKS[type].label+' aberto!',
     'Você gastou **'+result.cost.toLocaleString('pt-BR')+' coins** e recebeu:\n\n'+lines.join('\n\n')+
-    '\n\nCada edição e arte fica salva no seu inventário. Veja **/fut colecao**.',
+    '\n\nCada edição e arte fica salva no seu inventário. Veja **/s colecao**.',
     GOLD,false,[],result.cards.map(c=>editionArtUrl(c.player.key,c.edition)));
 }
 
@@ -176,7 +177,7 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
       if (r.state === 'recusado') return update('🚫 Desafio recusado', 'O adversário recusou a partida.', ERROR);
       if (r.state === 'concluído' && r.match) {
         return update('🏟️ FIM DE JOGO',
-          `${tag(r.match.home_id)} **${r.match.score_home} × ${r.match.score_away}** ${tag(r.match.away_id)}\n\n⭐ Força: ${r.powerHome} vs. ${r.powerAway}\n🪙 Vitória: 180 coins · Empate: 80 coins · Derrota: 40 coins\n\nVeja a classificação em **/fut ranking**!`, GREEN);
+          `${tag(r.match.home_id)} **${r.match.score_home} × ${r.match.score_away}** ${tag(r.match.away_id)}\n\n⭐ Força: ${r.powerHome} vs. ${r.powerAway}\n🪙 Vitória: 180 coins · Empate: 80 coins · Derrota: 40 coins\n\nVeja a classificação em **/s ranking**!`, GREEN);
       }
       return message(`❌ ${r.state}`, true);
     }
@@ -184,7 +185,7 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
     return message('Esse botão não pertence ao Futstancy.', true);
   }
 
-  if (i.type !== 2 || i.data?.name !== 'fut') return message('Comando não reconhecido.', true);
+  if (i.type !== 2 || i.data?.name !== COMMAND_ROOT) return message('Comando não reconhecido.', true);
   if (!i.guild_id) return message('Use o Futstancy em um servidor do Discord.', true);
   const opt = i.data.options?.[0];
   const action = opt?.name ?? 'ajuda';
@@ -194,8 +195,8 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
   if (action === 'iniciar') {
     const made = await start(env.DB, uid);
     return made
-      ? card('🎉 Seu clube nasceu!', 'Você recebeu **11 jogadores titulares**, a formação **4-3-3** e **1.500 coins**!\n\nUse **/fut time** para conhecer o elenco e **/fut obter** para ganhar sua próxima carta.', GREEN, false)
-      : card('⚽ Clube já criado', 'Você já tem um clube. Use **/fut time**, **/fut colecao** ou **/fut perfil** para continuar.');
+      ? card('🎉 Seu clube nasceu!', 'Você recebeu **11 jogadores titulares**, a formação **4-3-3** e **1.500 coins**!\n\nUse **/s time** para conhecer o elenco e **/s obter** para ganhar sua próxima carta.', GREEN, false)
+      : card('⚽ Clube já criado', 'Você já tem um clube. Use **/s time**, **/s colecao** ou **/s perfil** para continuar.');
   }
   if (action === 'artes') return showGallery(uid,0,'cards');
   if (action === 'ranking') {
@@ -235,7 +236,7 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
     const result=await openPack(env.DB,uid,type);
     return result.ok?showOpenedPack(type,result):
       card('💸 Saldo insuficiente','Pacote '+PACKS[type].label+': **'+PACKS[type].cost.toLocaleString('pt-BR')+
-        ' coins** necessários.\nUse **/fut daily** ou jogue partidas.',ERROR);
+        ' coins** necessários.\nUse **/s daily** ou jogue partidas.',ERROR);
   }
   if(action==='colecao')return showCollection(env,uid,0,String(getOption(args,'raridade')??'todas'));
   if (action === 'time') return showTeam(env, uid);
@@ -246,18 +247,18 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
   if (action === 'escalar') {
     const id = String(getOption(args, 'id') ?? '').trim();
     const slot = Number(getOption(args, 'vaga'));
-    if (!/^[a-f0-9]{16}$/.test(id)) return message('ID inválido. Copie o ID de **/fut colecao**.');
+    if (!/^[a-f0-9]{16}$/.test(id)) return message('ID inválido. Copie o ID de **/s colecao**.');
     return message(await setSlot(env.DB, uid, id, slot));
   }
   if (action === 'desafiar') {
     const opponent = String(getOption(args, 'membro') ?? '');
     if (!/^\d{15,22}$/.test(opponent) || uid === opponent) return message('Escolha um adversário válido diferente de você.');
     const other = await account(env.DB, opponent);
-    if (!other) return message('Seu adversário ainda não criou um clube com **/fut iniciar**.');
+    if (!other) return message('Seu adversário ainda não criou um clube com **/s iniciar**.');
     const [myLineup, theirLineup] = await Promise.all([lineup(env.DB, uid), lineup(env.DB, opponent)]);
     const home = lineupPlayers(myLineup);
     const away = lineupPlayers(theirLineup);
-    if (!home || !away) return message('Os dois jogadores precisam de 11 titulares válidos. Use **/fut auto**.');
+    if (!home || !away) return message('Os dois jogadores precisam de 11 titulares válidos. Use **/s auto**.');
     const match = await createChallenge(env.DB, uid, opponent);
     return card('⚔️ Desafio Futstancy!', `${tag(uid)} desafiou ${tag(opponent)} para uma partida!\n\n🏆 **${teamStrength(home)} OVR vs ${teamStrength(away)} OVR**\n⏱️ Convite válido por **15 minutos**.\n\nApenas o desafiado pode aceitar.`, GOLD, false,
       rows([button('⚽ Aceitar desafio', `match:accept:${match.id}`, 3), button('❌ Recusar', `match:decline:${match.id}`, 4)]));
@@ -265,9 +266,9 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
   if (action === 'vender') {
     const id = String(getOption(args, 'id') ?? '');
     const price = Number(getOption(args, 'preco'));
-    if (!/^[a-f0-9]{16}$/.test(id)) return message('ID de carta inválido. Consulte **/fut colecao**.');
+    if (!/^[a-f0-9]{16}$/.test(id)) return message('ID de carta inválido. Consulte **/s colecao**.');
     const result = await listCard(env.DB, uid, id, price);
-    return result.ok ? card('🏷️ Carta anunciada!', `Preço: **${price.toLocaleString('pt-BR')} coins**\nCódigo: \`${result.id}\`\n\nTaxa de venda: **5%**. Para cancelar: **/fut cancelar**.`, GREEN, true)
+    return result.ok ? card('🏷️ Carta anunciada!', `Preço: **${price.toLocaleString('pt-BR')} coins**\nCódigo: \`${result.id}\`\n\nTaxa de venda: **5%**. Para cancelar: **/s cancelar**.`, GREEN, true)
       : message('Não foi possível anunciar. Verifique se a carta é sua, não está escalada e ainda não está no mercado.');
   }
   if (action === 'comprar') return handleBuy(env, uid, String(getOption(args, 'codigo') ?? ''));
@@ -275,7 +276,7 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
     const ok = await cancelListing(env.DB, uid, String(getOption(args, 'codigo') ?? ''));
     return message(ok ? '✅ Anúncio cancelado! A carta está disponível novamente.' : '❌ Código inválido ou anúncio não é seu/foi encerrado.');
   }
-  return message('Comando não encontrado. Use **/fut ajuda**.');
+  return message('Comando não encontrado. Use **/s ajuda**.');
 }
 
 async function handleBuy(env: Env, uid: string, id: string) {
