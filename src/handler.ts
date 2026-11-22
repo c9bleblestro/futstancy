@@ -221,41 +221,85 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
   const args = opt?.options ?? [];
 
   if (action === 'ajuda') return card('⚽ FUTSTANCY — Guia do treinador', help, PURPLE, false);
-  if (action === 'iniciar') {
-    const made = await start(env.DB, uid);
+  if(action==='iniciar'){
+    const made=await start(env.DB,uid);
     return made
-      ? card('🎉 Seu clube nasceu!', 'Você recebeu **11 jogadores titulares**, a formação **4-3-3** e **1.500 coins**!\n\nUse **/s time** para conhecer o elenco e **/s obter** para ganhar sua próxima carta.', GREEN, false)
-      : card('⚽ Clube já criado', 'Você já tem um clube. Use **/s time**, **/s colecao** ou **/s perfil** para continuar.');
+      ? card('🎉 Bem-vindo ao seu clube',
+          '**SEU CLUBE ESTÁ PRONTO PARA JOGAR.**\n\n'+
+          '🪙 **1.500 coins** de saldo inicial\n'+
+          '🃏 **11 cartas** de jogadores\n'+
+          '⚽ **4-3-3** já escalado\n\n'+
+          '**PRÓXIMOS PASSOS**\n'+
+          'Use **/s time** para conhecer os titulares e **/s obter** para ganhar outra carta.',
+          GREEN,false)
+      : card('⚽ Clube já existente',
+          'Sua equipe e seu progresso estão preservados.\n\n'+
+          '**/s time**  ›  Titulares\n**/s colecao**  ›  Suas cartas\n**/s perfil**  ›  Saldo e estatísticas.',
+          PURPLE,true);
   }
   if (action === 'artes') return showGallery(uid,0,'cards');
-  if (action === 'ranking') {
-    const top = await leaderboard(env.DB);
-    const out = top.map((a, n) => `**${n + 1}º** ${tag(a.user_id)} — **${a.wins * 3 + a.draws} pts** (${a.wins}V/${a.draws}E/${a.losses}D)`).join('\n');
-    return card('🏆 Ranking global de clubes', out || 'Ninguém jogou ainda. Seja o primeiro!', GOLD, false);
+  if(action==='ranking'){
+    const top=await leaderboard(env.DB);
+    const medals=['🥇','🥈','🥉'];
+    const entries=top.map((a,n)=>{
+      const pts=a.wins*3+a.draws;
+      return (medals[n]??('**'+(n+1)+'º**'))+'  '+tag(a.user_id)+
+        '\n-# '+pts+' PTS   •   '+a.wins+'V  '+a.draws+'E  '+a.losses+'D';
+    });
+    return card('🏆 Ranking de clubes',
+      '**TABELA GERAL**   •   Top 10 treinadores\n'+
+      '-# Vitória +3 pts  ·  Empate +1 pt  ·  Derrota +0 pt\n\n'+
+      (entries.join('\n\n')||'Nenhum clube disputou partidas ainda.')+
+      '\n\n-# A classificação considera todos os clubes cadastrados no bot.',
+      GOLD,false);
   }
   if (action === 'mercado') return showMarket(env,String(getOption(args,'raridade')??'todas'));
 
   const me = await account(env.DB, uid);
   if (!me) return needStart();
 
-  if (action === 'perfil') {
-    const games = me.wins + me.draws + me.losses;
-    return card('🪪 Seu perfil de treinador', `${tag(uid)}\n\n🪙 **${me.coins.toLocaleString('pt-BR')} coins**\n⚔️ Partidas: **${games}**\n🏆 Vitórias: **${me.wins}**\n🤝 Empates: **${me.draws}**\n❌ Derrotas: **${me.losses}**\n⚽ Gols: **${me.goals_for}** feitos · **${me.goals_against}** sofridos\n📊 Pontos: **${me.wins * 3 + me.draws}**`);
+  if(action==='perfil'){
+    const games=me.wins+me.draws+me.losses;
+    const points=me.wins*3+me.draws;
+    const pct=games?Math.round(me.wins/games*100):0;
+    return card('🪪 Perfil do treinador',
+      '### '+tag(uid)+'\n\n'+
+      '**🪙 CARTEIRA**\n'+
+      '**'+me.coins.toLocaleString('pt-BR')+' coins** disponíveis\n\n'+
+      '**🏟️ DESEMPENHO**\n'+
+      '**'+games+'** partidas   •   **'+points+'** pontos   •   **'+pct+'%** de vitórias\n'+
+      '🟢 '+me.wins+' vitórias   ⚪ '+me.draws+' empates   🔴 '+me.losses+' derrotas\n\n'+
+      '**⚽ ESTATÍSTICAS**\n'+
+      me.goals_for+' gols marcados   •   '+me.goals_against+' gols sofridos\n\n'+
+      '-# Melhore a equipe com /s colecao e /s time.',
+      PURPLE,true);
   }
-  if(action==='obter') {
+  if(action==='obter'){
     const drop=drawEdition('misto');
     const result=await claim(env.DB,uid,drop.player,drop.edition);
     return result.ok
-      ? card('🎁 Jogador contratado!','**'+drop.player.name+'** · '+drop.player.pos+' · '+drop.player.ovr+' OVR\n'+
-          '**'+TIER_NAMES[drop.tier]+'** · Edição: '+drop.edition.replace(/_/g,' ')+
-          '\n🌍 '+drop.player.country+'\n🆔 ID: '+String.fromCharCode(96)+result.cardId+String.fromCharCode(96)+
-          '\n\nPróxima carta em **25 minutos**.',GOLD,false,[],[editionArtUrl(drop.player.key,drop.edition)])
-      : card('⏳ Aguarde para obter outra carta','Faltam **'+timeRemaining(result.left)+'** para o próximo jogador.',ERROR);
+      ? card('🎁 Nova contratação!',
+          '**'+drop.player.name+'**  ·  **'+drop.player.ovr+' OVR**\n'+
+          '-# '+drop.player.pos+'   •   '+drop.player.country+'\n\n'+
+          '**'+TIER_NAMES[drop.tier]+'**   ·   Edição: '+drop.edition.replace(/_/g,' ')+
+          '\nID: '+String.fromCharCode(96)+result.cardId+String.fromCharCode(96)+
+          '\n\n-# Uma nova carta grátis estará disponível em 25 minutos.',
+          GOLD,false,[],[editionArtUrl(drop.player.key,drop.edition)])
+      : card('⏳ Carta ainda indisponível',
+          'Você já recebeu seu jogador gratuito.\n\n'+
+          '**PRÓXIMA OBTENÇÃO**\n⏱️ **'+timeRemaining(result.left)+'**\n\n'+
+          '-# Use /s colecao para acompanhar seus jogadores.',PURPLE);
   }
-  if (action === 'daily') {
-    const result = await daily(env.DB, uid);
-    return result.ok ? card('💰 Recompensa diária!', `Você ganhou **350 coins**!\nSaldo: **${result.coins.toLocaleString('pt-BR')}** coins`, GOLD, false)
-      : card('⏳ Daily indisponível', `Volte em **${timeRemaining(result.left)}**. Seu saldo: **${result.coins.toLocaleString('pt-BR')} coins**.`);
+  if(action==='daily'){
+    const result=await daily(env.DB,uid);
+    return result.ok
+      ? card('💰 Recompensa resgatada',
+          '### +350 coins\nSua recompensa entrou na carteira!\n\n'+
+          '**SALDO ATUAL**\n🪙 **'+result.coins.toLocaleString('pt-BR')+' coins**\n\n'+
+          '-# Próximo resgate disponível em 20 horas.',GREEN,false)
+      : card('⏳ Recompensa indisponível',
+          '**PRÓXIMO RESGATE**\n⏱️ '+timeRemaining(result.left)+'\n\n'+
+          '**SALDO ATUAL**\n🪙 '+result.coins.toLocaleString('pt-BR')+' coins',PURPLE);
   }
   if(action==='pacote') {
     const requested=getOption(args,'tipo');
@@ -279,43 +323,65 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
     if (!/^[a-f0-9]{16}$/.test(id)) return message('ID inválido. Copie o ID de **/s colecao**.');
     return message(await setSlot(env.DB, uid, id, slot));
   }
-  if (action === 'desafiar') {
-    const opponent = String(getOption(args, 'membro') ?? '');
-    if (!/^\d{15,22}$/.test(opponent) || uid === opponent) return message('Escolha um adversário válido diferente de você.');
-    const other = await account(env.DB, opponent);
-    if (!other) return message('Seu adversário ainda não criou um clube com **/s iniciar**.');
-    const [myLineup, theirLineup] = await Promise.all([lineup(env.DB, uid), lineup(env.DB, opponent)]);
-    const home = lineupPlayers(myLineup);
-    const away = lineupPlayers(theirLineup);
-    if (!home || !away) return message('Os dois jogadores precisam de 11 titulares válidos. Use **/s auto**.');
-    const match = await createChallenge(env.DB, uid, opponent);
-    return card('⚔️ Desafio Futstancy!', `${tag(uid)} desafiou ${tag(opponent)} para uma partida!\n\n🏆 **${teamStrength(home)} OVR vs ${teamStrength(away)} OVR**\n⏱️ Convite válido por **15 minutos**.\n\nApenas o desafiado pode aceitar.`, GOLD, false,
-      rows([button('⚽ Aceitar desafio', `match:accept:${match.id}`, 3), button('❌ Recusar', `match:decline:${match.id}`, 4)]));
+  if(action==='desafiar'){
+    const opponent=String(getOption(args,'membro')??'');
+    if(!/^\d{15,22}$/.test(opponent)||uid===opponent)return message('Selecione um adversário válido e diferente de você.');
+    const other=await account(env.DB,opponent);
+    if(!other)return message('O adversário ainda não criou o clube. Oriente-o a usar /s iniciar.');
+    const [myLineup,theirLineup]=await Promise.all([lineup(env.DB,uid),lineup(env.DB,opponent)]);
+    const home=lineupPlayers(myLineup),away=lineupPlayers(theirLineup);
+    if(!home||!away)return message('Os dois clubes precisam de 11 titulares. Use /s auto.');
+    const match=await createChallenge(env.DB,uid,opponent);
+    return card('⚔️ Convite para partida',
+      '**'+tag(uid)+'**\n### VS\n**'+tag(opponent)+'**\n\n'+
+      '**FORÇA DOS CLUBES**\n'+teamStrength(home)+' OVR   ×   '+teamStrength(away)+' OVR\n\n'+
+      '⏱️ **15 minutos** para responder\n'+
+      '-# Apenas o adversário poderá aceitar ou recusar este duelo.',
+      GOLD,false,rows([
+        button('⚽ Aceitar partida','match:accept:'+match.id,3),
+        button('✕ Recusar','match:decline:'+match.id,4),
+      ]),[]);
   }
-  if (action === 'vender') {
-    const id = String(getOption(args, 'id') ?? '');
-    const price = Number(getOption(args, 'preco'));
-    if (!/^[a-f0-9]{16}$/.test(id)) return message('ID de carta inválido. Consulte **/s colecao**.');
-    const result = await listCard(env.DB, uid, id, price);
-    return result.ok ? card('🏷️ Carta anunciada!', `Preço: **${price.toLocaleString('pt-BR')} coins**\nCódigo: \`${result.id}\`\n\nTaxa de venda: **5%**. Para cancelar: **/s cancelar**.`, GREEN, true)
-      : message('Não foi possível anunciar. Verifique se a carta é sua, não está escalada e ainda não está no mercado.');
+  if(action==='vender'){
+    const id=String(getOption(args,'id')??'');
+    const price=Number(getOption(args,'preco'));
+    if(!/^[a-f0-9]{16}$/.test(id))return message('ID de carta inválido. Consulte /s colecao.');
+    const result=await listCard(env.DB,uid,id,price);
+    return result.ok
+      ? card('🏷️ Anúncio publicado',
+          'Sua carta está disponível no mercado.\n\n'+
+          '**PREÇO DE VENDA**   🪙 '+price.toLocaleString('pt-BR')+' coins\n'+
+          '**VALOR LÍQUIDO**   🪙 '+Math.floor(price*0.95).toLocaleString('pt-BR')+' coins\n'+
+          '**CÓDIGO**   '+String.fromCharCode(96)+result.id+String.fromCharCode(96)+
+          '\n\n-# Taxa de 5% ao vender. Para retirar, use /s cancelar.',
+          GREEN,true,[],[])
+      : message('Não foi possível anunciar. Verifique se a carta é sua, se está fora do time e se não possui outro anúncio.');
   }
   if (action === 'comprar') return handleBuy(env, uid, String(getOption(args, 'codigo') ?? ''));
-  if (action === 'cancelar') {
-    const ok = await cancelListing(env.DB, uid, String(getOption(args, 'codigo') ?? ''));
-    return message(ok ? '✅ Anúncio cancelado! A carta está disponível novamente.' : '❌ Código inválido ou anúncio não é seu/foi encerrado.');
+  if(action==='cancelar'){
+    const ok=await cancelListing(env.DB,uid,String(getOption(args,'codigo')??''));
+    return ok
+      ? card('✅ Anúncio cancelado',
+          'A carta voltou a ficar disponível para seu clube.\n\n'+
+          '-# Você pode escalá-la com /s escalar ou anunciá-la novamente.',GREEN,true,[],[])
+      : card('❌ Não foi possível cancelar',
+          'O código não existe, não pertence a você ou já foi encerrado.',ERROR,true,[],[]);
   }
   return message('Comando não encontrado. Use **/s ajuda**.');
 }
 
-async function handleBuy(env: Env, uid: string, id: string) {
-  if (!/^[a-f0-9]{16}$/.test(id)) return message('Código de anúncio inválido.');
-  if (!await account(env.DB, uid)) return needStart();
-  const result = await buyCard(env.DB, uid, id);
+async function handleBuy(env:Env,uid:string,id:string){
+  if(!/^[a-f0-9]{16}$/.test(id))return message('Código de anúncio inválido.');
+  if(!await account(env.DB,uid))return needStart();
+  const result=await buyCard(env.DB,uid,id);
   return result.ok
-    ? card('✅ Transferência concluída!',
-        'Você contratou **'+(result.player?.name??'jogador')+'** · '+(TIER_NAMES[result.tier??'legado']??'Clássica')+
-        ' por **'+result.price?.toLocaleString('pt-BR')+' coins**!\nA carta manteve sua edição original e entrou na coleção.',
+    ? card('✅ Contratação concluída',
+        '**'+(result.player?.name??'Jogador')+'** foi contratado!\n\n'+
+        '**EDIÇÃO**   '+(TIER_NAMES[result.tier??'legado']??'Clássica')+'\n'+
+        '**VALOR PAGO**   🪙 '+result.price?.toLocaleString('pt-BR')+' coins\n\n'+
+        '-# A arte e a edição permanecem vinculadas ao exemplar. Confira /s colecao.',
         GREEN,true,[],result.player?[editionArtUrl(result.player.key,result.edition??'legado')]:[])
-    : card('❌ Compra não realizada','Confira o saldo, se o anúncio ainda existe e se a carta não é sua.',ERROR);
+    : card('❌ Transferência não concluída',
+        'Verifique se o anúncio está ativo, se você tem coins suficientes e se a carta não é sua.',
+        ERROR,true,[],[]);
 }
