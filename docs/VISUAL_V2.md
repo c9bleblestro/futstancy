@@ -26,7 +26,7 @@ A integração atual continua no Cloudflare Workers + D1. O novo pacote `@cf-was
 ### Verificação pós-deploy
 1. Abra `https://futstancy.likeparaopeixe.workers.dev/health` e procure `"version":"1.1.0"`.
 2. Abra `https://futstancy.likeparaopeixe.workers.dev/art/player.png?k=vinicius` e confirme que aparece uma imagem.
-3. Use `/fut obter`, `/fut colecao`, `/fut time` e `/fut mercado` no Discord.
+3. Use `/s obter`, `/s colecao`, `/s time` e `/s mercado` no Discord.
 4. Se alguma imagem não carregar, consulte **Cloudflare → Worker → Observability → Logs** e procure `[ART]` ou `[ART PLAYER]`. Isso é diferente do log de build.
 
 O status do Worker em `/health` indica acessibilidade da API, mas não prova que o renderizador de imagens está funcionando: teste também a rota `/art/player.png`.
