@@ -5,13 +5,17 @@ Não precisa de computador ligado, processo Discord Gateway ou Railway. O Worker
 
 > Estado do projeto: **MVP funcional de código**, pronto para configurar e publicar. Ainda não está conectado a um aplicativo Discord nem implantado na Cloudflare. Não inclua tokens em arquivos versionados.
 
+## Prefixo de comandos: S
+
+Use **`/s`** seguido do subcomando no Discord: por exemplo, **`/s iniciar`**, **`/s pacote`** ou **`/s colecao`**. Os comandos de barra do Discord exigem letras minúsculas, por isso o nome registrado é `s`. O bot atual funciona por interações HTTP; comandos enviados como mensagens de texto, como `Scolecao`, precisam de uma arquitetura com Gateway e não estão habilitados nesta versão.
+
 ## 📦 V5 — Loja de pacotes por raridade
 
 A biblioteca inclui **75 artes** (53 completas jogáveis e 22 prévias); as artes completas alimentam os pacotes **Comum (450), Prata (900), Ouro (2.100), Ícone (4.500), Lendário (8.500), Eclipse (12.500)** e **Misto (900)**, sempre com 3 cartas. Todos os valores em coins.
 
 No Misto, as chances por carta são: **55% Comum, 22% Prata, 12% Ouro, 7% Ícone, 3% Lendário e 1% Eclipse**. Pacotes específicos garantem sua raridade. Artes Premium (recortadas) não são sorteadas. Cartas repetidas podem vir.
 
-Use `/fut pacote` para ver a loja, `/fut pacote tipo:...` para comprar diretamente, `/fut colecao raridade:...` para filtrar seu inventário e `/fut artes` para navegar pelos lotes separados por raridade.
+Use `/s pacote` para ver a loja, `/s pacote tipo:...` para comprar diretamente, `/s colecao raridade:...` para filtrar seu inventário e `/s artes` para navegar pelos lotes separados por raridade.
 
 **Migração obrigatória:** antes de implantar o Worker V5, aplique `migrations/0002_card_editions.sql` no banco D1 (por exemplo via `npm run db:remote`). As cartas antigas mantêm os mesmos IDs, donos e saldos, sendo marcadas com raridade/edição `legado`. Não implante o Worker novo antes da migração.
 
@@ -19,22 +23,22 @@ Use `/fut pacote` para ver a loja, `/fut pacote tipo:...` para comprar diretamen
 
 | Comando | Funcionalidade |
 | --- | --- |
-| `/fut iniciar` | Cria clube e entrega **11 titulares** e 1.500 coins |
-| `/fut obter` | Ganha uma carta aleatória a cada **25 minutos** |
-| `/fut daily` | Resgata **350 coins** a cada **20 horas** |
-| `/fut pacote` | Loja de **7 pacotes** (Misto + 6 raridades), com 3 cartas por abertura |
-| `/fut colecao` | Inventário com filtro de raridade, edições persistentes e IDs próprios |
-| `/fut time` | Equipe 4-3-3, posição por posição e overall |
-| `/fut auto` | Escala automaticamente os melhores jogadores por posição |
-| `/fut escalar` | Troca manualmente um titular usando ID e posição |
-| `/fut desafiar` | PvP por botões Aceitar/Recusar, força influencia resultado, recompensa em coins |
-| `/fut perfil` | Vitórias, derrotas, empates, gols e coins |
-| `/fut ranking` | Pontuação global (3 por vitória, 1 por empate) |
-| `/fut mercado` | Lista as cartas à venda com botão de compra |
-| `/fut vender` | Anuncia carta fora da escalação por 100–200.000 coins |
-| `/fut comprar` | Compra por código de anúncio; taxa de 5% na venda |
-| `/fut cancelar` | Retira anúncio próprio, sem custo |
-| `/fut ajuda` | Guia do bot |
+| `/s iniciar` | Cria clube e entrega **11 titulares** e 1.500 coins |
+| `/s obter` | Ganha uma carta aleatória a cada **25 minutos** |
+| `/s daily` | Resgata **350 coins** a cada **20 horas** |
+| `/s pacote` | Loja de **7 pacotes** (Misto + 6 raridades), com 3 cartas por abertura |
+| `/s colecao` | Inventário com filtro de raridade, edições persistentes e IDs próprios |
+| `/s time` | Equipe 4-3-3, posição por posição e overall |
+| `/s auto` | Escala automaticamente os melhores jogadores por posição |
+| `/s escalar` | Troca manualmente um titular usando ID e posição |
+| `/s desafiar` | PvP por botões Aceitar/Recusar, força influencia resultado, recompensa em coins |
+| `/s perfil` | Vitórias, derrotas, empates, gols e coins |
+| `/s ranking` | Pontuação global (3 por vitória, 1 por empate) |
+| `/s mercado` | Lista as cartas à venda com botão de compra |
+| `/s vender` | Anuncia carta fora da escalação por 100–200.000 coins |
+| `/s comprar` | Compra por código de anúncio; taxa de 5% na venda |
+| `/s cancelar` | Retira anúncio próprio, sem custo |
+| `/s ajuda` | Guia do bot |
 
 São **60 atletas** no catálogo, com OVR **inventado exclusivamente para este jogo**. A V5 usa imagens completas próprias, armazenando a edição e a raridade em cada carta. Os recortes são exibidos somente na galeria; a interface utiliza Components V2.
 
@@ -51,7 +55,7 @@ As coleções, moedas, resultados e transferências ficam no Cloudflare D1, comp
 5. A Cloudflare criará uma URL parecida com `https://futstancy.SEUSUBDOMINIO.workers.dev`. Abra `/health` para testar a API. No **Discord Developer Portal → General Information**, cole a URL acrescentando **`/interactions`** no campo **Interactions Endpoint URL** e salve. Discord envia PING e o Worker valida a assinatura criptográfica.
 6. Em **Discord Developer Portal → Installation**, configure **Guild Install** com o escopo `applications.commands`. Se o portal exigir bot scope, adicione `bot` e a permissão **Send Messages**. Gere o link de instalação, abra no celular e adicione ao servidor.
 7. Os slash commands serão registrados automaticamente durante a validação da URL **se os três secrets já estiverem configurados**. Caso contrário, a tarefa agendada tentará registrar a cada **15 minutos** até obter sucesso. O registro global pode levar algum tempo para aparecer no Discord.
-8. No servidor use **`/fut iniciar`** e depois **`/fut desafiar`** para testar com um segundo usuário.
+8. No servidor use **`/s iniciar`** e depois **`/s desafiar`** para testar com um segundo usuário.
 
 **Repositório oficial:** https://github.com/c9bleblestro/futstancy
 
