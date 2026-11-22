@@ -204,9 +204,15 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
       if (!['accept', 'decline'].includes(action) || !/^[a-f0-9]{16}$/.test(matchId ?? '')) return message('Convite inválido.', true);
       const r = await resolveChallenge(env.DB, matchId, uid, action === 'accept');
       if (r.state === 'recusado') return update('🚫 Desafio recusado', 'O adversário recusou a partida.', ERROR);
-      if (r.state === 'concluído' && r.match) {
-        return update('🏟️ FIM DE JOGO',
-          `${tag(r.match.home_id)} **${r.match.score_home} × ${r.match.score_away}** ${tag(r.match.away_id)}\n\n⭐ Força: ${r.powerHome} vs. ${r.powerAway}\n🪙 Vitória: 180 coins · Empate: 80 coins · Derrota: 40 coins\n\nVeja a classificação em **/s ranking**!`, GREEN);
+      if(r.state==='concluído'&&r.match) {
+        const result=r.match;
+        const summary='**MANDANTE**  '+tag(result.home_id)+'\n'+
+          '# '+result.score_home+'   ×   '+result.score_away+'\n'+
+          '**VISITANTE**  '+tag(result.away_id)+'\n\n'+
+          '**⭐ FORÇA DAS EQUIPES**\n'+r.powerHome+' OVR  ×  '+r.powerAway+' OVR\n\n'+
+          '🪙 **RECOMPENSAS**\nVitória: 180  ·  Empate: 80  ·  Derrota: 40 coins\n\n'+
+          '-# Confira sua posição em /s ranking.';
+        return update('🏟️ Resultado da partida',summary,GREEN,[]);
       }
       return message(`❌ ${r.state}`, true);
     }
