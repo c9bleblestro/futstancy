@@ -171,9 +171,10 @@ export async function listCard(db: Database, userId: string, cardId: string, pri
   return change(created) ? { ok: true, id } : { ok: false };
 }
 
-export async function marketPage(db: Database): Promise<ListingRow[]> {
-  return (await db.prepare(`SELECT m.*, c.player_key,c.edition,c.tier FROM market m JOIN cards c ON c.id=m.card_id AND c.owner_id=m.seller_id
-    WHERE m.status='active' ORDER BY m.created_ms DESC LIMIT 8`).all<ListingRow>()).results;
+export async function marketPage(db: Database, tier = 'todas'): Promise<ListingRow[]> {
+  const where = tier === 'todas' ? '' : ' AND c.tier=?';
+  const stmt = db.prepare("SELECT m.*, c.player_key,c.edition,c.tier FROM market m JOIN cards c ON c.id=m.card_id AND c.owner_id=m.seller_id WHERE m.status='active'" + where + ' ORDER BY m.created_ms DESC LIMIT 8');
+  return (await (tier==='todas'?stmt:stmt.bind(tier)).all<ListingRow>()).results;
 }
 
 export async function buyCard(db: Database, buyerId: string, listingId: string): Promise<{ ok: boolean; player?: Player; price?: number; edition?: string; tier?: string }> {

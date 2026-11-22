@@ -54,9 +54,13 @@ export const PACK_ODDS: ReadonlyArray<{tier: Exclude<ArtTier,'premium'>; percent
   {tier:'eclipse', percent:1},
 ];
 
+export function assetArtUrl(path:string):string {
+  return 'https://raw.githubusercontent.com/c9bleblestro/futstancy/main/' + path + '?v=' + ART_REV;
+}
+
 export function editionArtUrl(playerKey: string, edition: string): string {
   const item = (EDITIONS[playerKey] ?? []).find(e => e.edition === edition && e.quality === 'full');
-  if (item) return 'https://raw.githubusercontent.com/c9bleblestro/futstancy/main/' + item.file + '?v=' + ART_REV;
+  if (item) return assetArtUrl(item.file);
   const player = getPlayer(playerKey);
   return player ? playerArtUrl(player, 0) : '';
 }
