@@ -8,6 +8,7 @@ import { PACKS, PACK_TYPES, PACK_ODDS, TIER_NAMES, GALLERY_TIERS, drawEdition, e
 import type { Env, Interaction, Option } from './types.ts';
 
 const help = [
+  '-# Prefixo: **Sobter**, **Spacote ouro**, **Scolecao**  ·  Slash: **/s obter**',
   '### 🎮 COMEÇAR A JOGAR',
   '**/s iniciar**  ›  Crie seu clube com 11 jogadores e 1.500 coins',
   '**/s obter**  ›  Carta gratuita a cada 25 minutos',
