@@ -1,14 +1,16 @@
 # ⚽ FUTSTANCY — futebol no Discord
 
-**Bot novo, independente do Savage, projetado para Cloudflare Workers + D1.**
-Não precisa de computador ligado, processo Discord Gateway ou Railway. O Worker recebe comandos por HTTP e executa somente quando acionado. Os recursos gratuitos da Cloudflare têm cotas.
+**Bot independente do Savage:** comandos slash funcionam via Cloudflare Workers + D1. Para reconhecer mensagens comuns com prefixo S, o projeto inclui um serviço Discord Gateway persistente, que precisa ficar online numa hospedagem Node.js. O Worker e o Gateway compartilham a lógica do jogo.
 
-> Estado do projeto: **MVP funcional de código**, pronto para configurar e publicar. Ainda não está conectado a um aplicativo Discord nem implantado na Cloudflare. Não inclua tokens em arquivos versionados.
+> Estado do projeto: **MVP funcional de código**, pronto para configurar e publicar. Ainda não está conectado a um aplicativo Discord nem implantado na Cloudflare. Não inclua tokens em arquivos versionados. O Gateway precisa de processo persistente; o Worker Cloudflare é serverless.
 
-## Prefixo de comandos: S
+## Prefixo S — mensagens comuns e comandos slash
 
-Use **`/s`** seguido do subcomando no Discord: por exemplo, **`/s iniciar`**, **`/s pacote`** ou **`/s colecao`**. Os comandos de barra do Discord exigem letras minúsculas, por isso o nome registrado é `s`. O bot atual funciona por interações HTTP; comandos enviados como mensagens de texto, como `Scolecao`, precisam de uma arquitetura com Gateway e não estão habilitados nesta versão.
+Agora há **dois formatos de comando**. Para usar mensagens normais no canal, escreva `Siniciar`, `Sobter`, `Sdaily`, `Spacote ouro`, `Scolecao`, `Smercado prata`, `Sdesafiar @membro` ou `Sajuda`. Também aceita espaço, como `S obter` ou `S pacote ouro`. O formato slash `/s iniciar` continua disponível.
 
+**Importante:** o prefixo só recebe mensagens quando **o Gateway Node.js está hospedado e conectado ao Discord**, e o Worker Cloudflare está atualizado. É obrigatório habilitar **Message Content Intent** no Discord Developer Portal → Bot. Um push ao GitHub não inicia esse receptor automaticamente.
+
+Consulte **[docs/PREFIXO_S.md](docs/PREFIXO_S.md)** para ativação, secrets e hospedagem.
 ## 📦 V5 — Loja de pacotes por raridade
 
 A biblioteca inclui **75 artes** (53 completas jogáveis e 22 prévias); as artes completas alimentam os pacotes **Comum (450), Prata (900), Ouro (2.100), Ícone (4.500), Lendário (8.500), Eclipse (12.500)** e **Misto (900)**, sempre com 3 cartas. Todos os valores em coins.
@@ -17,7 +19,7 @@ No Misto, as chances por carta são: **55% Comum, 22% Prata, 12% Ouro, 7% Ícone
 
 Use `/s pacote` para ver a loja, `/s pacote tipo:...` para comprar diretamente, `/s colecao raridade:...` para filtrar seu inventário e `/s artes` para navegar pelos lotes separados por raridade.
 
-**Migração obrigatória:** antes de implantar o Worker V5, aplique `migrations/0002_card_editions.sql` no banco D1 (por exemplo via `npm run db:remote`). As cartas antigas mantêm os mesmos IDs, donos e saldos, sendo marcadas com raridade/edição `legado`. Não implante o Worker novo antes da migração.
+**Migrações obrigatórias:** antes de implantar o Worker V5.3, aplique `migrations/0002_card_editions.sql` e `migrations/0003_text_prefix.sql` no banco D1 (por exemplo via `npm run db:remote`). As cartas antigas mantêm os mesmos IDs, donos e saldos, sendo marcadas com raridade/edição `legado`. Não implante o Worker novo antes da migração.
 
 ## O que existe na primeira versão
 
@@ -75,6 +77,7 @@ Deploy com o Wrangler já autenticado:
 
 ```bash
 npm run deploy
+npm run gateway:start  # execute separadamente em hospedagem Node persistente
 ```
 
 - `src/index.ts`: endpoint, assinatura Ed25519, PING, agendamento de registro de comandos.
@@ -91,8 +94,8 @@ npm run deploy
 - O endpoint de interação usa assinatura **Ed25519** e timestamp para rejeitar requisições forjadas.
 - Coins, leilões, escalações e desafios têm validações no banco; SQLite/D1 executa os batches de operação em transação.
 - Não armazena tokens pessoais de usuários; utiliza somente os IDs do Discord, dados de clube e partidas.
-- Não usa mensagens da Gateway, nem entra em canais de voz; é um jogo 100% baseado em comandos e botões.
+- O serviço Gateway lê somente mensagens comuns de servidores que iniciam com um comando reconhecido pelo prefixo S. Ignora mensagens de bots e não acessa voz.
 - **Fase 2 sugerida:** cartas ilustradas originais, formações alternativas, campeonatos automáticos, temporadas e dashboard.
-- O deploy na conta da Cloudflare e o registro real no Discord dependem de suas credenciais e não foram realizados durante a criação do código.
+- O deploy na Cloudflare, a ativação do Message Content Intent e a hospedagem do Gateway requerem configurações e credenciais próprias; um push ao GitHub não os executa.
 
 Feito para você administrar pelo celular, com custos zero enquanto ficar dentro dos limites gratuitos da Cloudflare.
