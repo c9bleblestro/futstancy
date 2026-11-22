@@ -81,7 +81,18 @@ export function visualTheme(title:string|undefined,content=''):Theme {
   const d=content.toLocaleLowerCase('pt-BR');
   if(/erro|falha|inválid|não realizada|insuficiente|recusado|❌/.test(t))return {label:'ATENÇÃO',color:ERROR};
   if(/aguarde|indisponível|⏳/.test(t))return {label:'TEMPO DE ESPERA',color:0xf59e0b};
-  if(/sucesso|concluíd|contratad|criado|nasceu|aberto|recompensa|🎉|✅/.test(t))
+  if(/aberto/.test(t)){
+    const color=/eclipse/.test(t)?0x22d3ee:
+      /lendário/.test(t)?0xf97316:
+      /ícone/.test(t)?0xa78bfa:
+      /prata/.test(t)?0xcbd5e1:
+      /comum/.test(t)?0x94a3b8:
+      /ouro/.test(t)?GOLD:PURPLE;
+    return {label:'REVELAÇÃO DE PACOTE',color};
+  }
+  if(/nova contratação|contratação!|jogador contratado/.test(t))
+    return {label:'NOVA CARTA',color:GOLD};
+  if(/sucesso|concluíd|contratad|criado|nasceu|recompensa|🎉|✅/.test(t))
     return {label:'CONQUISTA',color:GREEN};
   if(/coleção|colecao/.test(t))return {label:'SEU INVENTÁRIO',color:PURPLE};
   if(/artes|galeria/.test(t))return {label:'BIBLIOTECA DE ARTE',color:0xa78bfa};
@@ -89,9 +100,9 @@ export function visualTheme(title:string|undefined,content=''):Theme {
   if(/time|equipe|escalação/.test(t))return {label:'VESTIÁRIO',color:0x38bdf8};
   if(/pacote|loja/.test(t))return {label:'PACOTES E RECOMPENSAS',color:GOLD};
   if(/ranking|classificação/.test(t))return {label:'TEMPORADA',color:GOLD};
-  if(/desafio|jogo|placar|resultado|fim de jogo/.test(t))return {label:'ARENA FUTSTANCY',color:0xfb7185};
-  if(/perfil|treinador/.test(t))return {label:'IDENTIDADE DO CLUBE',color:PURPLE};
+  if(/desafio|jogo|partida|convite|placar|resultado|fim de jogo/.test(t))return {label:'ARENA FUTSTANCY',color:0xfb7185};
   if(/guia|ajuda/.test(t))return {label:'CENTRAL DO TREINADOR',color:PURPLE};
+  if(/perfil|treinador/.test(t))return {label:'IDENTIDADE DO CLUBE',color:PURPLE};
   if(/daily|moeda|coins/.test(t))return {label:'ECONOMIA DO CLUBE',color:GOLD};
   if(!title&&/❌|erro|inválid|não foi possível/.test(d))return {label:'AVISO',color:ERROR};
   return {label:'FOOTBALL CLUB',color:PURPLE};
