@@ -55,7 +55,7 @@ As coleções, moedas, resultados e transferências ficam no Cloudflare D1, comp
 3. A configuração `wrangler.jsonc` define o Worker e o banco **D1**. A Cloudflare pode provisionar o banco automaticamente na primeira implantação. Se o formulário pedir comandos: **Build command:** vazio ou `npm run typecheck`; **Deploy command:** `npm run deploy`; instalação de dependências: `npm install`.
 4. Na Cloudflare, abra seu Worker → **Settings → Variables and Secrets** e adicione três secrets: `DISCORD_PUBLIC_KEY` (Public Key), `DISCORD_APPLICATION_ID` (Application ID) e `DISCORD_BOT_TOKEN` (Bot Token). Cole os valores somente no painel da Cloudflare. Confira se a publicação está com o D1 vinculado e se a migração criou as tabelas (o script de deploy executa `wrangler d1 migrations apply DB --remote`).
 5. A Cloudflare criará uma URL parecida com `https://futstancy.SEUSUBDOMINIO.workers.dev`. Abra `/health` para testar a API. No **Discord Developer Portal → General Information**, cole a URL acrescentando **`/interactions`** no campo **Interactions Endpoint URL** e salve. Discord envia PING e o Worker valida a assinatura criptográfica.
-6. Em **Discord Developer Portal → Installation**, configure **Guild Install** com o escopo `applications.commands`. Se o portal exigir bot scope, adicione `bot` e a permissão **Send Messages**. Gere o link de instalação, abra no celular e adicione ao servidor.
+6. Em **Discord Developer Portal → Installation**, configure **Guild Install** com os escopos **`applications.commands` e `bot`**. Para o prefixo em texto, conceda **View Channels, Send Messages e Read Message History**. Ative **Message Content Intent** em **Bot**. Gere o link de instalação, abra no celular e adicione ao servidor.
 7. Os slash commands serão registrados automaticamente durante a validação da URL **se os três secrets já estiverem configurados**. Caso contrário, a tarefa agendada tentará registrar a cada **15 minutos** até obter sucesso. O registro global pode levar algum tempo para aparecer no Discord.
 8. No servidor use **`/s iniciar`** e depois **`/s desafiar`** para testar com um segundo usuário.
 
@@ -98,4 +98,4 @@ npm run gateway:start  # execute separadamente em hospedagem Node persistente
 - **Fase 2 sugerida:** cartas ilustradas originais, formações alternativas, campeonatos automáticos, temporadas e dashboard.
 - O deploy na Cloudflare, a ativação do Message Content Intent e a hospedagem do Gateway requerem configurações e credenciais próprias; um push ao GitHub não os executa.
 
-Feito para você administrar pelo celular, com custos zero enquanto ficar dentro dos limites gratuitos da Cloudflare.
+Você pode administrar o projeto pelo celular. O Worker pode caber nas cotas gratuitas da Cloudflare; o receptor de mensagens com Gateway exige um serviço Node.js persistente, que pode ter custo de hospedagem.
