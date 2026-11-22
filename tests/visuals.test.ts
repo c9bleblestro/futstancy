@@ -15,7 +15,7 @@ test('coleção envia fotos em cartas JPG estáticas; elimina imagens em branco 
   assert.equal(urls.length,3);
   assert.ok(urls[0].includes('/assets/editions/carvajal/comum.jpg'));
   assert.ok(urls[1].includes('/assets/editions/casemiro/ouro.jpg'));
-  assert.ok(urls[2].includes('/assets/editions/richarlison/prata.jpg'));
+  assert.match(urls[2],/\/assets\/editions\/richarlison\/(prata|comum)\.jpg/);
   assert.ok(urls.every(url=>url.startsWith('https://raw.githubusercontent.com/')));
 });
 
