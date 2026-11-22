@@ -41,7 +41,7 @@ export interface Account {
   last_claim_ms: number | null;
   last_daily_ms: number | null;
 }
-export interface CardRow { id: string; owner_id: string; player_key: string; acquired_ms: number; }
-export interface LineupRow { slot: number; id: string; player_key: string; }
+export interface CardRow { id: string; owner_id: string; player_key: string; acquired_ms: number; edition: string; tier: string; }
+export interface LineupRow { slot: number; id: string; player_key: string; edition: string; tier: string; }
 export interface MatchRow { id: string; home_id: string; away_id: string; status: string; created_ms: number; expires_ms: number; score_home: number | null; score_away: number | null; }
-export interface ListingRow { id: string; card_id: string; seller_id: string; price: number; status: string; player_key: string; }
+export interface ListingRow { id: string; card_id: string; seller_id: string; price: number; status: string; player_key: string; edition: string; tier: string; }

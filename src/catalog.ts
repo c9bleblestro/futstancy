@@ -48,6 +48,24 @@ export const PLAYERS: Player[] = [
   { key: 'leao', name: 'Rafael Leão', pos: 'ATA', ovr: 85, country: 'Portugal' },
   { key: 'richarlison', name: 'Richarlison', pos: 'ATA', ovr: 78, country: 'Brasil' },
   { key: 'endrick', name: 'Endrick', pos: 'ATA', ovr: 77, country: 'Brasil' },
+
+  // Jogadores que já possuem artes individuais nos lotes visuais, agora disponíveis no jogo.
+  { key: 'ayrton', name: 'Ayrton Lucas', pos: 'ZAG', ovr: 78, country: 'Brasil' },
+  { key: 'brunoguimaraes', name: 'Bruno Guimarães', pos: 'MEI', ovr: 85, country: 'Brasil' },
+  { key: 'cristiano', name: 'Cristiano Ronaldo', pos: 'ATA', ovr: 90, country: 'Portugal' },
+  { key: 'cunha', name: 'Matheus Cunha', pos: 'ATA', ovr: 82, country: 'Brasil' },
+  { key: 'douglasluiz', name: 'Douglas Luiz', pos: 'MEI', ovr: 80, country: 'Brasil' },
+  { key: 'gabrieljesus', name: 'Gabriel Jesus', pos: 'ATA', ovr: 80, country: 'Brasil' },
+  { key: 'marquinhos', name: 'Marquinhos', pos: 'ZAG', ovr: 85, country: 'Brasil' },
+  { key: 'martinelli', name: 'Gabriel Martinelli', pos: 'ATA', ovr: 82, country: 'Brasil' },
+  { key: 'meret', name: 'Alex Meret', pos: 'GOL', ovr: 80, country: 'Itália' },
+  { key: 'messi', name: 'Lionel Messi', pos: 'ATA', ovr: 91, country: 'Argentina' },
+  { key: 'neymar', name: 'Neymar Jr.', pos: 'ATA', ovr: 88, country: 'Brasil' },
+  { key: 'nico', name: 'Nico Williams', pos: 'ATA', ovr: 84, country: 'Espanha' },
+  { key: 'pedro', name: 'Pedro', pos: 'ATA', ovr: 79, country: 'Brasil' },
+  { key: 'rodrygo', name: 'Rodrygo', pos: 'ATA', ovr: 84, country: 'Brasil' },
+  { key: 'romero', name: 'Cristian Romero', pos: 'ZAG', ovr: 85, country: 'Argentina' },
+  { key: 'savinho', name: 'Savinho', pos: 'ATA', ovr: 82, country: 'Brasil' },
 ];
 
 export const STARTER_KEYS = [
