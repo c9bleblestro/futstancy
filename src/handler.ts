@@ -2,15 +2,16 @@ import { getPlayer, playerLabel, drawPlayer } from './catalog.ts';
 import { SLOT_POSITION, PACK_COST, timeRemaining, teamStrength } from './game.ts';
 import { account, start, claim, daily, collectionPage, lineup, lineupPlayers, autoLineup, setSlot, createChallenge, resolveChallenge, openPack, marketPage, listCard, buyCard, cancelListing, leaderboard } from './storage.ts';
 import { card, message, update, rows, button, GOLD, GREEN, ERROR, PURPLE } from './ui.ts';
-import { galleryPages, type GalleryKind } from './editions.ts';
+import { SHOWCASE, type GalleryKind } from './editions.ts';
+import { PACKS, PACK_TYPES, PACK_ODDS, TIER_NAMES, GALLERY_TIERS, drawEdition, editionArtUrl, assetArtUrl, galleryArtFiles, tierCount, type PackType } from './packs.ts';
 import type { Env, Interaction, Option } from './types.ts';
 
 const help = [
   '🎟️ **/fut iniciar** — clube + 11 jogadores iniciais',
   '🎁 **/fut obter** — carta grátis a cada 25 min',
   '💰 **/fut daily** — 350 coins a cada 20h',
-  '📦 **/fut pacote** — 3 cartas por 900 coins',
-  '🗂️ **/fut colecao** — cartas e seus IDs',
+  '📦 **/fut pacote** — loja de pacotes por raridade',
+  '🗂️ **/fut colecao** — cartas com filtros de raridade',
   '🎨 **/fut artes** — biblioteca de todos os lotes e designs',
   '📋 **/fut time** — escalação titular 4-3-3',
   '⚙️ **/fut auto** — melhor escalação automática',
@@ -30,55 +31,101 @@ function actorId(i: Interaction): string | null { return i.member?.user?.id ?? i
 const tag = (id: string) => `<@${id}>`;
 const needStart = () => card('⚽ Primeiro, crie seu clube', 'Use **/fut iniciar** para receber seus 11 jogadores e começar com 1.500 coins.');
 
-function showGallery(owner:string,page:number,kind:GalleryKind) {
-  const pages=galleryPages(kind);
+const COLLECTION_FILTERS=['todas','comum','prata','ouro','icone','lendario','eclipse','legado'] as const;
+const isCollectionTier=(value:string):boolean=>COLLECTION_FILTERS.includes(value as typeof COLLECTION_FILTERS[number]);
+const isPackType=(value:string):value is PackType=>Object.hasOwn(PACKS,value);
+
+function showGallery(owner:string,page:number,kind:GalleryKind,tier='todas') {
+  const selected=GALLERY_TIERS.includes(tier as typeof GALLERY_TIERS[number])?tier:'todas';
+  const files=kind==='cards'?galleryArtFiles(selected as Parameters<typeof galleryArtFiles>[0]):SHOWCASE;
+  const pages=Math.max(1,Math.ceil(files.length/6));
   const safe=Math.min(Math.max(0,Math.trunc(page)||0),pages-1);
-  const title='🎨 Galeria de artes — '+(kind==='cards'?'Cartas':'Designs')+' '+(safe+1)+'/'+pages;
+  const heading=kind==='cards'?'Cartas · '+(TIER_NAMES[selected]??'Todas'):'Designs';
+  const title='🎨 Galeria de artes — '+heading+' '+(safe+1)+'/'+pages;
   const info=kind==='cards'
-    ? 'Versões alternativas e edições especiais do Futstancy. Algumas são recortes de prévia; cartas oficiais do jogo usam somente imagens completas e os atributos reais do catálogo.'
-    : 'Conceitos visuais de coleção, mercado, escalação, pacotes e eventos. Os valores mostrados nas prévias são ILUSTRATIVOS, não seu saldo ou resultados reais.';
-  return card(title,info,PURPLE,true,rows([
-    button('◀ Anterior',`art:${owner}:${kind}:${safe-1}`,2,safe===0),
-    button('Próxima ▶',`art:${owner}:${kind}:${safe+1}`,1,safe===pages-1),
-    button(kind==='cards'?'Ver designs':'Ver cartas',`art:${owner}:${kind==='cards'?'designs':'cards'}:0`,2)
-  ]));
+    ? 'Lotes separados por raridade. Recortes são apenas prévias e não entram em pacotes; o jogo só entrega artes completas.'
+    : 'Conceitos de interface. Os preços, saldos e resultados nas prévias são ilustrativos.';
+  const controls=[
+    button('◀ Anterior','art:'+owner+':'+kind+':'+selected+':'+(safe-1),2,safe===0),
+    button('Próxima ▶','art:'+owner+':'+kind+':'+selected+':'+(safe+1),1,safe===pages-1),
+    button(kind==='cards'?'Ver designs':'Ver cartas','art:'+owner+':'+(kind==='cards'?'designs':'cards')+':todas:0',2),
+  ];
+  if(kind==='cards') controls.push(button('Todas','art:'+owner+':cards:todas:0'),
+    ...GALLERY_TIERS.map(t=>button(TIER_NAMES[t],'art:'+owner+':cards:'+t+':0')));
+  return card(title,info,PURPLE,true,rows(controls),files.slice(safe*6,safe*6+6).map(assetArtUrl));
 }
 
-async function showCollection(env: Env, owner: string, page: number) {
-  const data = await collectionPage(env.DB, owner, page);
-  const safePage = Math.min(Math.max(0, page), data.pages - 1);
-  const lines = data.cards.map((row, index) => {
-    const p = getPlayer(row.player_key);
-    return `${safePage * 6 + index + 1}. ${p ? playerLabel(p) : row.player_key}\n    ID: \`${row.id}\``;
+async function showCollection(env:Env,owner:string,page:number,tier='todas'){
+  const selected=isCollectionTier(tier)?tier:'todas';
+  const data=await collectionPage(env.DB,owner,page,selected);
+  const safe=Math.min(Math.max(0,page),data.pages-1);
+  const lines=data.cards.map((c,index)=>{
+    const p=getPlayer(c.player_key);
+    const name=p?p.name+' · '+p.pos+' · '+p.ovr+' OVR':c.player_key;
+    return (safe*6+index+1)+'. **'+name+'** · **'+(TIER_NAMES[c.tier]??c.tier)+'**\n  Edição: '+
+      c.edition.replace(/_/g,' ')+' · ID: '+String.fromCharCode(96)+c.id+String.fromCharCode(96);
   });
-  return card('🗂️ Sua coleção', `${lines.join('\n\n') || 'Nenhuma carta encontrada.'}\n\n**${data.total} cartas** · Página ${safePage + 1}/${data.pages}`, PURPLE, true,
-    rows([
-      button('◀ Anterior', `col:${owner}:${safePage - 1}`, 2, safePage === 0),
-      button('Próxima ▶', `col:${owner}:${safePage + 1}`, 2, safePage >= data.pages - 1),
-    ]));
+  const controls=[
+    button('◀ Anterior','col:'+owner+':'+selected+':'+(safe-1),2,safe===0),
+    button('Próxima ▶','col:'+owner+':'+selected+':'+(safe+1),2,safe>=data.pages-1),
+    ...COLLECTION_FILTERS.map(t=>button(TIER_NAMES[t],'col:'+owner+':'+t+':0')),
+  ];
+  return card('🗂️ Sua coleção · '+TIER_NAMES[selected],
+    (lines.join('\n\n')||'Nenhuma carta nesta raridade.')+'\n\n**'+data.total+' cartas** · Página '+(safe+1)+'/'+data.pages,
+    PURPLE,true,rows(controls),data.cards.map(c=>editionArtUrl(c.player_key,c.edition)).filter(Boolean));
 }
 
-async function showTeam(env: Env, owner: string) {
-  const all = await lineup(env.DB, owner);
-  const players = lineupPlayers(all);
-  const lines = SLOT_POSITION.map((pos, index) => {
-    const row = all.find(e => e.slot === index + 1);
-    const p = row && getPlayer(row.player_key);
-    return `**${index + 1}. ${pos}** · ${p ? `${p.name} (${p.ovr} OVR)` : 'Vaga vazia'}`;
+async function showTeam(env:Env,owner:string) {
+  const all=await lineup(env.DB,owner);
+  const players=lineupPlayers(all);
+  const lines=SLOT_POSITION.map((pos,index)=>{
+    const c=all.find(x=>x.slot===index+1),p=c?getPlayer(c.player_key):null;
+    return '**'+(index+1)+'. '+pos+'** · '+(p?p.name+' ('+p.ovr+' OVR) · '+(TIER_NAMES[c?.tier??'legado']??'Clássica'):'Vaga vazia');
   });
-  return card('⚽ Sua equipe — 4-3-3', `${lines.join('\n')}\n\n**Força total:** ${players ? teamStrength(players) + ' OVR' : 'Incompleta'}\n\nTroque titulares com **/fut escalar**, ou use **Autoescalação**.`, PURPLE, true,
-    rows([button('⚙️ Autoescalar', `auto:${owner}`, 1)]));
+  const description=lines.join('\n')+'\n\n**Força total:** '+(players?teamStrength(players)+' OVR':'Incompleta')+
+    '\n\nTroque titulares com **/fut escalar** ou use a autoescalação.';
+  return card('⚽ Sua equipe — 4-3-3',description,PURPLE,true,rows([button('⚙️ Autoescalar','auto:'+owner,1)]),
+    [...all].sort((a,b)=>a.slot-b.slot).map(c=>editionArtUrl(c.player_key,c.edition)).filter(Boolean));
 }
 
-async function showMarket(env: Env) {
-  const listings = await marketPage(env.DB);
-  if (!listings.length) return card('🛒 Mercado de transferências', 'Sem cartas anunciadas. Use **/fut vender** para ser o primeiro vendedor.', GOLD, false);
-  const text = listings.map((l, i) => {
-    const player = getPlayer(l.player_key);
-    return `**${i + 1}.** ${player ? playerLabel(player) : 'Jogador'}\n💰 **${l.price.toLocaleString('pt-BR')} coins** · Código: \`${l.id}\``;
+async function showMarket(env:Env,tier='todas') {
+  const selected=isCollectionTier(tier)?tier:'todas';
+  const listings=await marketPage(env.DB,selected);
+  const filters=COLLECTION_FILTERS.map(t=>button(TIER_NAMES[t],'mkt:'+t));
+  if(!listings.length)return card('🛒 Mercado · '+TIER_NAMES[selected],
+    'Nenhuma carta anunciada nesta raridade. Use **/fut vender** para anunciar uma carta.',GOLD,false,rows(filters),[]);
+  const content=listings.map((l,i)=>{
+    const p=getPlayer(l.player_key);
+    return '**'+(i+1)+'.** '+(p?p.name+' · '+p.ovr+' OVR':'Jogador')+' · **'+(TIER_NAMES[l.tier]??l.tier)+
+      '**\n💰 **'+l.price.toLocaleString('pt-BR')+' coins** · Código: '+String.fromCharCode(96)+l.id+String.fromCharCode(96);
   }).join('\n\n');
-  return card('🛒 Mercado de transferências', `${text}\n\nClique em **Comprar** ou use **/fut comprar**. A venda cobra taxa de 5% do vendedor.`, GOLD, false,
-    rows(listings.map((l, i) => button(`Comprar ${i + 1}`, `buy:${l.id}`, 3))));
+  return card('🛒 Mercado · '+TIER_NAMES[selected],
+    content+'\n\nUse **Comprar** ou **/fut comprar**. Taxa de 5% cobrada do vendedor.',
+    GOLD,false,rows([...listings.map((l,i)=>button('Comprar '+(i+1),'buy:'+l.id,3)),...filters]),
+    listings.map(l=>editionArtUrl(l.player_key,l.edition)).filter(Boolean));
+}
+
+function showPacks(owner:string,coins:number){
+  const lines=PACK_TYPES.map(t=>{
+    const p=PACKS[t];
+    const pool=t==='misto'?'todas as raridades':tierCount(t).full+' artes completas';
+    return '**'+p.label+'** — **'+p.cost.toLocaleString('pt-BR')+' coins** · '+p.description+' · '+pool;
+  });
+  const odds=PACK_ODDS.map(o=>TIER_NAMES[o.tier]+' '+o.percent+'%').join(' · ');
+  return card('📦 Loja de pacotes por raridade',
+    'Saldo: **'+coins.toLocaleString('pt-BR')+' coins**\nCada pacote dá **3 cartas** exclusivamente da raridade escolhida (exceto Misto).\n\n'+
+    lines.join('\n')+'\n\n**Chances por carta no Misto:** '+odds+
+    '\n\nPremium ainda possui somente prévias e não é sorteado. Você pode receber exemplares repetidos.',
+    GOLD,true,rows(PACK_TYPES.map(t=>button('Abrir '+TIER_NAMES[t],'pack:'+owner+':'+t,3,PACKS[t].cost>coins))),[]);
+}
+
+function showOpenedPack(type:PackType,result:Awaited<ReturnType<typeof openPack>>){
+  const lines=result.cards.map(c=>'• **'+c.player.name+'** · '+c.player.pos+' · '+c.player.ovr+' OVR · '+TIER_NAMES[c.tier]+
+    '\n  Edição: '+c.edition.replace(/_/g,' ')+' · ID: '+String.fromCharCode(96)+c.id+String.fromCharCode(96));
+  return card('📦 '+PACKS[type].label+' aberto!',
+    'Você gastou **'+result.cost.toLocaleString('pt-BR')+' coins** e recebeu:\n\n'+lines.join('\n\n')+
+    '\n\nCada edição e arte fica salva no seu inventário. Veja **/fut colecao**.',
+    GOLD,false,[],result.cards.map(c=>editionArtUrl(c.player.key,c.edition)));
 }
 
 export async function handleInteraction(i: Interaction, env: Env): Promise<object> {
