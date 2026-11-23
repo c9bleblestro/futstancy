@@ -195,13 +195,15 @@ test('álbum permite anunciar carta selecionada com modal de preço validado',as
   });
   const modal=await handleInteraction(evt(3,{custom_id:custom}),{DB:db} as Env) as any;
   assert.equal(modal.type,9);
+  assert.equal(modal.data.components[0].type,18);
+  assert.equal(modal.data.components[0].component.custom_id,'price');
   assert.match(modal.data.custom_id,/^colprice:/);
   const invalid=await handleInteraction(evt(5,{custom_id:modal.data.custom_id,components:[
     {type:1,components:[{type:4,custom_id:'price',value:'12'}]},
   ]}),{DB:db} as Env) as any;
   assert.match(JSON.stringify(invalid),/100 a 200000/);
   const sold=await handleInteraction(evt(5,{custom_id:modal.data.custom_id,components:[
-    {type:1,components:[{type:4,custom_id:'price',value:'1500'}]},
+    {type:18,component:{type:4,custom_id:'price',value:'1500'}},
   ]}),{DB:db} as Env) as any;
   assert.match(JSON.stringify(sold),/Carta anunciada/);
   assert.equal((await db.prepare("SELECT COUNT(*) AS n FROM market WHERE card_id=? AND status='active'").bind(chosen).first<{n:number}>())?.n,1);
