@@ -82,7 +82,7 @@ export function buildProfileSvg(me:Account,rows:LineupRow[],identity:DiscordIden
       '<circle cx="186" cy="257" r="31" fill="#57bbae"/>'+
       '<path d="M120 337Q120 289 186 289Q252 289 252 337Z" fill="#57bbae"/></g>';
   const hero=pictures.star&&star
-    ? '<image href="'+pictures.star+'" x="711" y="950" width="227" height="265" preserveAspectRatio="xMidYMid meet"/>'
+    ? '<image href="'+pictures.star+'" x="729" y="1013" width="172" height="183" preserveAspectRatio="xMidYMid meet"/>'
     : '<g><path d="M766 1006L881 1006L899 1039L879 1163L821 1204L764 1163L745 1039Z" fill="#102c35" stroke="#43afa4" stroke-width="3"/>'+
       '<text x="821" y="1108" text-anchor="middle" font-family="Lato" font-size="35" fill="#74cabd">F</text>'+
       '<text x="821" y="1153" text-anchor="middle" font-family="Lato" font-size="13" fill="#abccc5">SEM ARTE</text></g>';
@@ -144,7 +144,7 @@ export function buildProfileSvg(me:Account,rows:LineupRow[],identity:DiscordIden
     '<path d="M660 991V1206" stroke="#5ef4e7" stroke-opacity=".4"/>',
     '<text x="815" y="1000" font-family="Lato" font-size="19" text-anchor="middle" fill="#f7e2a5">MELHOR TITULAR</text>',
     hero,
-    '<text x="815" y="1214" font-family="Lato" font-size="16" text-anchor="middle" fill="#f4fff9">',star?escapeXml(cut(star.name,16)):'SEM TITULAR','</text>',
+    '<text x="815" y="1215" font-family="Lato" font-size="16" text-anchor="middle" fill="#f4fff9">',star?escapeXml(cut(star.name,16)):'SEM TITULAR','</text>',
     '<text x="76" y="785" font-family="Lato" font-size="13" fill="#7eaaa9">PONTOS NA TABELA  ',fmt(points),'</text>',
     '</svg>'
   ].join('');
@@ -161,9 +161,8 @@ export async function renderProfileImage(req:Request,env:Env):Promise<Response>{
     guildAvatar:url.searchParams.get('gavatar')??undefined,
   };
   const best=[...rows].sort((a,b)=>(getPlayer(b.player_key)?.ovr??0)-(getPlayer(a.player_key)?.ovr??0))[0];
-  const [id,photo,art]=await Promise.all([
+  const [id,art]=await Promise.all([
     discordIdentity(owner,guild,env),
-    Promise.resolve(null), // avatar carregado após a identidade ser resolvida
     best?approvedArt(best.player_key,best.edition):Promise.resolve(null),
   ]);
   const identity=(id.name==='Treinador'&&fallbacks.name)?{...id,name:cut(fallbacks.name)}:id;
