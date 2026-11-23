@@ -19,11 +19,13 @@ const systems=[
 test('nove contextos do jogo usam sete capas de arte distintas e CDN segura',()=>{
   for(const [title,key] of systems){
     const url=systemBanner(title);
-    assert.match(url??'',new RegExp('/assets/ui/v57/'+key+'\\.jpg\\?v='));
+    if(key==='mercado')assert.match(url??'',/\/art\/market-banner\.png\?rev=v593/);
+    else assert.ok((url??'').includes('/assets/ui/v57/'+key+'.jpg?v='));
     const nodes=items(buildComponents(title,'Coins reais: 1234'));
     const galleries=nodes.filter(x=>x.type===12);
     assert.equal(galleries.length,1);
-    assert.match(galleries[0].items[0].media.url,new RegExp('/'+key+'\\.jpg'));
+    if(key==='mercado')assert.match(galleries[0].items[0].media.url,/\/art\/market-banner\.png/);
+    else assert.ok(galleries[0].items[0].media.url.includes('/'+key+'.jpg'));
     assert.ok(nodes.filter(x=>x.type===10).some(x=>x.content.includes('Coins reais: 1234')));
     const direct=(buildComponents(title,'dados reais')[0] as any).components;
     assert.ok(direct.length<=10,title);

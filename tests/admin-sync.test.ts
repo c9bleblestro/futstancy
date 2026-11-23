@@ -82,7 +82,7 @@ test('sincronizar registra slash comandos em uma única chamada, sem publicar lo
   assert.match(called[0].url,/\/applications\/1514849502018928793\/commands$/);
   assert.equal(called[0].body[0].name,'fut');
   assert.equal(called[0].body[1].name,'sincronizar');
-  assert.equal(b.settings.get('commands_version')?.startsWith('v5.9.2'),true);
+  assert.equal(b.settings.get('commands_version')?.startsWith('v5.9.3'),true);
   assert.ok(b.settings.has('admin_commands_sync_last_ms'));
   assert.ok(!stringify(response).includes('@everyone'));
   const again=await handleAdminSync(session('sincronizar'),env(b.DB),request) as any;

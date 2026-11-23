@@ -24,7 +24,7 @@ test('coleção envia fotos em cartas JPG estáticas; elimina imagens em branco 
 test('mercado, time e pacote exibem retratos dos jogadores reais cadastrados',()=>{
   const market=gallery('🛒 Mercado de transferências','**1.** **Erling Haaland** · ATA · **93 OVR**\n💰 **9.000 coins** · Código: \`123\`');
   assert.equal(market.length,2);
-  assert.match(market[0],/\/assets\/ui\/v57\/mercado\.jpg/);
+  assert.match(market[0],/\/art\/market-banner\.png\?rev=v593/);
   assert.match(market[1],/\/assets\/editions\/haaland\/icone\.jpg/);
   const team=gallery('⚽ Sua equipe — 4-3-3','**1. GOL** · Alisson Becker (89 OVR)\n**2. ZAG** · Dani Carvajal (81 OVR)\n**Força total:** 84 OVR');
   assert.equal(team.length,3);
@@ -68,7 +68,7 @@ test('Worker mantém rotas legadas e não expõe keys desconhecidas',async()=>{
   const ctx={waitUntil() {}};
   const status=await worker.fetch(new Request('https://example.org/art/status'),{} as never,ctx);
   assert.equal(status.status,200);
-  assert.equal((await status.json() as {version:string}).version,'5.9.2');
+  assert.equal((await status.json() as {version:string}).version,'5.9.3');
   const no=await worker.fetch(new Request('https://example.org/art/player.png?k=bad'),{} as never,ctx);
   assert.equal(no.status,404);
 });

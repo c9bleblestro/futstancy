@@ -1,5 +1,13 @@
 # ⚽ FUTSTANCY — futebol no Discord
 
+## V5.9.3 — Novas artes de Perfil e Mercado
+
+**/fut perfil** agora usa um SVG cinematográfico em preto, ciano e dourado, renderizado pelo Worker a partir de dados reais do D1 e foto/nome atuais do Discord. A área de destaque usa uma miniatura da **arte de carta original completa** de um titular; se o maior OVR não tiver uma edição aprovada, o painel mantém o valor do maior OVR verdadeiro e exibe outra carta aprovada do elenco com o rótulo "Carta em destaque". Não cria cartas novas nem exibe retrato solto como card.
+
+**/fut mercado** utiliza a nova capa cinematográfica com título MERCADO, estádio noturno, medalhas e cards decorativos, rasterizada em PNG no Worker. Ela recria a composição dourada/ciano da referência visual aprovada **sem valores fictícios**; preços e anúncios continuam consultados do banco D1 e mostrados separadamente.
+
+Sem botões desenhados nas imagens. Botões reais, seletores, compra, compra/venda, atualização pública e proteção do dono permanecem funcionando. Sem migração D1. É necessário publicar o Worker na Cloudflare antes de visualizar a V5.9.3 no Discord.
+
 ## Comandos administrativos de sincronização
 
 Do arquivo Python recebido, foram adaptados os slash commands **/sincronizar** e **/parar_sincronizacao**, sem alterar o jogo, os outros comandos ou o prefixo de texto S.
