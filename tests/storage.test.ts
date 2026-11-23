@@ -160,7 +160,7 @@ test('álbum V5: oito miniaturas por página e progresso inclui atletas clássic
     member:{user:{id:owner,username:'tester'}},data,
   });
   const flatten=(items:any[]):any[]=>items.flatMap(x=>[x,...(Array.isArray(x.components)?flatten(x.components):[])]);
-  const response=await handleInteraction(sender({name:'s',options:[{type:1,name:'colecao'}]}),{DB:db} as Env) as any;
+  const response=await handleInteraction(sender({name:'fut',options:[{type:1,name:'colecao'}]}),{DB:db} as Env) as any;
   const nodes=flatten(response.data.components);
   assert.equal(nodes.filter(x=>x.type===12).flatMap(x=>x.items).length,8);
   const menu=nodes.find(x=>x.type===3&&x.custom_id.startsWith('colview:'));
@@ -207,5 +207,48 @@ test('álbum permite anunciar carta selecionada com modal de preço validado',as
   ]}),{DB:db} as Env) as any;
   assert.match(JSON.stringify(sold),/Carta anunciada/);
   assert.equal((await db.prepare("SELECT COUNT(*) AS n FROM market WHERE card_id=? AND status='active'").bind(chosen).first<{n:number}>())?.n,1);
+  db.client.close();
+});
+
+
+test('painéis do álbum, mercado e pacotes são públicos; navegação atualiza o mesmo painel',async()=>{
+  const db=new SqlDB(),owner='123456789012345678';
+  await start(db,owner);
+  const env={DB:db} as Env;
+  const slash=(sub:string):Interaction=>({
+    type:2,id:'slash-55',guild_id:'234567890123456789',
+    member:{user:{id:owner,username:'tester'}},
+    data:{name:'fut',options:[{type:1,name:sub}]},
+  });
+  const component=(custom_id:string,values?:string[]):Interaction=>({
+    type:3,id:'component-55',guild_id:'234567890123456789',
+    member:{user:{id:owner,username:'tester'}},
+    data:{custom_id,values},
+  });
+  const coll=await handleInteraction(slash('colecao'),env) as any;
+  assert.equal(coll.type,4);
+  assert.equal(coll.data.flags&64,0);
+  const inner=coll.data.components[0].components;
+  const pick=inner.flatMap((n:any)=>n.type===1?n.components:[])
+    .find((n:any)=>n.type===3&&n.custom_id.startsWith('colview:'));
+  assert.ok(pick);
+  const next=await handleInteraction(component('col:'+owner+':todas:1'),env) as any;
+  assert.equal(next.type,7);
+  assert.equal(next.data.flags&64,0);
+  const detail=await handleInteraction(component(pick.custom_id,[pick.options[0].value]),env) as any;
+  assert.equal(detail.type,7);
+  assert.match(JSON.stringify(detail.data.components),/Ficha da carta/);
+  const market=await handleInteraction(slash('mercado'),env) as any;
+  assert.equal(market.type,4);
+  assert.equal(market.data.flags&64,0);
+  const filtered=await handleInteraction(component('mkt:prata'),env) as any;
+  assert.equal(filtered.type,7);
+  const shop=await handleInteraction(slash('pacote'),env) as any;
+  assert.equal(shop.type,4);
+  assert.equal(shop.data.flags&64,0);
+  const opened=await handleInteraction(component('pack:'+owner+':comum'),env) as any;
+  assert.equal(opened.type,7);
+  assert.equal(opened.data.flags&64,0);
+  assert.match(JSON.stringify(opened.data.components),/aberto/);
   db.client.close();
 });
