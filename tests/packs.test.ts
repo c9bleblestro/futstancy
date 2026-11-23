@@ -3,10 +3,13 @@ import assert from 'node:assert/strict';
 import { EDITIONS } from '../src/editions.ts';
 import { PACKS, PACK_TYPES, PACK_ODDS, GALLERY_TIERS, ALL_ARTS, PLAYABLE_ARTS, editionArtUrl, editionTier, drawEdition, drawEditionPack, galleryArtFiles, tierCount } from '../src/packs.ts';
 
-test('todas as 75 artes estão agrupadas por raridade, inclusive prévias',()=>{
+test('75 artes preservadas no índice, mas só 53 completas são exibidas na galeria e nos pacotes',()=>{
   assert.equal(ALL_ARTS.length,75);
   assert.equal(Object.values(EDITIONS).flat().length,75);
-  assert.equal(GALLERY_TIERS.reduce((n,t)=>n+galleryArtFiles(t).length,0),75);
+  assert.equal(GALLERY_TIERS.reduce((n,t)=>n+galleryArtFiles(t).length,0),53);
+  assert.equal(galleryArtFiles('todas').length,53);
+  assert.equal(galleryArtFiles('premium').length,0);
+  assert.ok(galleryArtFiles('todas').every(file=>!file.includes('previa')&&!file.includes('premium_lote3')&&!file.startsWith('assets/cards/')));
   assert.equal(PLAYABLE_ARTS.length,53);
   assert.ok(PLAYABLE_ARTS.every(a=>a.tier!=='premium'));
   assert.equal(tierCount('premium').full,0);
