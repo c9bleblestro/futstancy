@@ -6,7 +6,6 @@ function items(nodes:any[]):any[]{
   return nodes.flatMap(n=>[n,...(Array.isArray(n.components)?items(n.components):[])]);
 }
 const systems=[
-  ['🪪 Perfil do treinador','perfil'],
   ['🛒 Mercado de transferências','mercado'],
   ['📦 Central de pacotes','pacotes'],
   ['⚽ Seu time titular','time'],
@@ -17,7 +16,7 @@ const systems=[
   ['🎉 Bem-vindo ao seu clube','inicio'],
   ['⚽ FUTSTANCY — Guia do treinador','inicio'],
 ] as const;
-test('dez contextos do jogo usam oito capas de arte distintas e CDN segura',()=>{
+test('nove contextos do jogo usam sete capas de arte distintas e CDN segura',()=>{
   for(const [title,key] of systems){
     const url=systemBanner(title);
     assert.match(url??'',new RegExp('/assets/ui/v57/'+key+'\\.jpg\\?v='));
@@ -30,7 +29,8 @@ test('dez contextos do jogo usam oito capas de arte distintas e CDN segura',()=>
     assert.ok(direct.length<=10,title);
   }
 });
-test('as artes individuais das cartas e o álbum nunca recebem banners de sistema',()=>{
+test('perfil dinâmico substitui a capa estática V5.7; álbum e cartas não recebem banners extras',()=>{
+  assert.equal(systemBanner('🪪 Perfil do treinador'),null);
   for(const title of ['📚 Álbum Futstancy','🎨 Galeria de artes — Cartas','🃏 Ficha da carta',
     '🎁 Nova contratação!','📦 Ouro aberto!']){
     assert.equal(systemBanner(title),null,title);

@@ -16,7 +16,7 @@ function base64(bytes:Uint8Array):string{
   for(let i=0;i<bytes.length;i+=8192)data+=String.fromCharCode(...bytes.subarray(i,i+8192));
   return btoa(data);
 }
-async function font():Promise<Uint8Array>{
+export async function font():Promise<Uint8Array>{
   if(!fontPromise)fontPromise=(async()=>{
     const response=await fetch(FONT_URL,{signal:AbortSignal.timeout(7000)});
     if(!response.ok)throw Error('Fonte indisponível');
@@ -27,7 +27,7 @@ async function font():Promise<Uint8Array>{
   return fontPromise;
 }
 /** Apenas artes completas; nunca molduras antigas, recortes ou prévias. */
-async function approvedArt(playerKey:string,edition:string):Promise<string|null>{
+export async function approvedArt(playerKey:string,edition:string):Promise<string|null>{
   const url=editionArtUrl(playerKey,edition);
   if(!/^https:\/\/raw\.githubusercontent\.com\/c9bleblestro\/futstancy\/main\/assets\/editions\//.test(url))
     return null;
@@ -50,55 +50,58 @@ async function approvedArt(playerKey:string,edition:string):Promise<string|null>
 export function buildSquadSvg(rows:LineupRow[],images:Readonly<Record<string,string>>={}):string{
   const bySlot=new Map(rows.map(r=>[r.slot,r]));
   const stats=squadStats(rows);
+  // Cada arte é a carta ORIGINAL COMPLETA, reduzida sem recorte nem moldura gerada.
+  // Labels de posição são externos; nunca desenhamos por cima dos atributos da carta.
   const blocks=TACTICAL_433.map(slot=>{
     const row=bySlot.get(slot.slot);
     const p=row?getPlayer(row.player_key):null;
-    const x=slot.x-75,y=slot.y-99;
     const art=row?images[row.id]:undefined;
-    const name=p?p.name.slice(0,16):'VAGA VAZIA';
-    const tint=art?'#33e0ba':p?'#6caab0':'#5a7a7f';
-    const artLayer=art
-      ? '<image x="'+(x+4)+'" y="'+(y+5)+'" width="142" height="149" preserveAspectRatio="xMidYMid slice" href="'+art+'"/>'
-      : '<rect x="'+(x+5)+'" y="'+(y+5)+'" width="140" height="149" rx="11" fill="#162a33"/>'+
-        '<path d="M'+(slot.x-24)+' '+(y+80)+'h48M'+slot.x+' '+(y+56)+'v48" stroke="#508b8a" stroke-width="3" opacity=".45"/>';
-    return '<g>'+
-      '<rect x="'+(x-2)+'" y="'+(y-2)+'" width="154" height="202" rx="15" fill="#03151c" fill-opacity=".66" stroke="'+tint+'" stroke-width="2"/>'+
-      '<rect x="'+(x+4)+'" y="'+(y+5)+'" width="142" height="149" rx="11" fill="#0e2930"/>'+
-      artLayer+
-      '<rect x="'+(x+4)+'" y="'+(y+137)+'" width="142" height="18" fill="#05171b" fill-opacity=".83"/>'+
-      '<rect x="'+(x+7)+'" y="'+(y+8)+'" width="49" height="25" rx="6" fill="#07252b" stroke="#83e9da" stroke-width="1"/>'+
-      '<text x="'+(x+31)+'" y="'+(y+26)+'" font-size="17" text-anchor="middle" fill="#d5fff5">'+xml(slot.role)+'</text>'+
-      '<text x="'+slot.x+'" y="'+(y+174)+'" font-size="16" text-anchor="middle" fill="#f3fff9">'+xml(name)+'</text>'+
-      '<text x="'+slot.x+'" y="'+(y+192)+'" font-size="14" text-anchor="middle" fill="#6ce4d2">'+
-      (p?xml(String(p.ovr))+' OVR':'TOQUE PARA ESCALAR')+'</text>'+
-    '</g>';
+    const x=slot.x-73,y=slot.y-99;
+    const name=p?p.name.slice(0,17):'VAGA LIVRE';
+    const short=p?p.name.split(/\s+/).slice(0,2).map(n=>n[0]).join('').toUpperCase():'＋';
+    const miniature=art
+      ? '<image x="'+x+'" y="'+y+'" width="146" height="184" preserveAspectRatio="xMidYMid meet" href="'+art+'"/>'
+      : '<g><circle cx="'+slot.x+'" cy="'+(y+89)+'" r="57" fill="#0e2c35" stroke="#3b9999" stroke-width="2" stroke-dasharray="'+(p?'5 8':'7 9')+'"/>'+
+        '<text x="'+slot.x+'" y="'+(y+102)+'" font-family="Lato" font-size="39" text-anchor="middle" fill="#79cfc8">'+xml(short)+'</text>'+
+        '<text x="'+slot.x+'" y="'+(y+145)+'" font-family="Lato" font-size="12" text-anchor="middle" fill="#80afa9">'+(p?'ARTE INDISPONIVEL':'SEM TITULAR')+'</text></g>';
+    return [
+      '<g>',
+      '<ellipse cx="',slot.x,'" cy="',slot.y+77,'" rx="67" ry="15" fill="#001b23" opacity=".6"/>',
+      '<path d="M',slot.x-47,' ',y+176,'h94" stroke="#40edce" stroke-width="2" stroke-opacity=".55"/>',
+      miniature,
+      '<rect x="',slot.x-27,'" y="',y-9,'" width="54" height="24" rx="10" fill="#031923" stroke="#57d7cb" stroke-opacity=".85"/>',
+      '<text x="',slot.x,'" y="',y+9,'" font-family="Lato" font-size="16" text-anchor="middle" fill="#e7fff9">',xml(slot.role),'</text>',
+      '<text x="',slot.x,'" y="',y+202,'" font-family="Lato" font-size="16" text-anchor="middle" fill="#f1fffa">',xml(name),'</text>',
+      '<text x="',slot.x,'" y="',y+219,'" font-family="Lato" font-size="15" text-anchor="middle" fill="#70e9d3">',p?xml(p.ovr)+' OVR':'ESCALAR','</text>',
+      '</g>'
+    ].join('');
   }).join('');
   const missing=11-stats.occupied;
   return [
   '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1350" viewBox="0 0 1024 1350">',
   '<defs>',
-    '<linearGradient id="bg" x2="1" y2="1"><stop offset="0" stop-color="#061721"/><stop offset=".52" stop-color="#103334"/><stop offset="1" stop-color="#07111d"/></linearGradient>',
-    '<linearGradient id="grass" x2="0" y2="1"><stop offset="0" stop-color="#135e54"/><stop offset=".5" stop-color="#0e5148"/><stop offset="1" stop-color="#083c3d"/></linearGradient>',
+    '<linearGradient id="bg" x2="1" y2="1"><stop offset="0" stop-color="#03121b"/><stop offset=".55" stop-color="#092a2f"/><stop offset="1" stop-color="#030c18"/></linearGradient>',
+    '<linearGradient id="grass" x2="0" y2="1"><stop offset="0" stop-color="#0c413d"/><stop offset=".48" stop-color="#0a3838"/><stop offset="1" stop-color="#072928"/></linearGradient>',
     '<linearGradient id="glass" x2="0" y2="1"><stop stop-color="#42cdbf" stop-opacity=".20"/><stop offset="1" stop-color="#064a49" stop-opacity=".10"/></linearGradient>',
-    '<pattern id="stripes" width="1024" height="160" patternUnits="userSpaceOnUse"><rect width="1024" height="80" fill="#37ffcc" opacity=".035"/></pattern>',
+    '<pattern id="stripes" width="1024" height="160" patternUnits="userSpaceOnUse"><rect width="1024" height="80" fill="#37ffcc" opacity=".055"/></pattern>',
   '</defs>',
-  '<rect width="1024" height="1350" fill="url(#bg)"/>',
+  '<rect width="1024" height="1350" fill="url(#bg)"/><path d="M610 0L820 0L160 1350H0Z" fill="#1ffff2" opacity=".025"/><path d="M1010 0H1024V550L690 0Z" fill="#35ffe3" opacity=".035"/>',
   '<rect x="25" y="22" width="974" height="1305" rx="29" fill="none" stroke="#5ff3d4" stroke-opacity=".31" stroke-width="2"/>',
-  '<text x="66" y="86" font-family="Lato" font-weight="700" font-size="34" letter-spacing="3" fill="#effffc">FUTSTANCY</text>',
+  '<text x="66" y="86" font-family="Lato" font-weight="700" font-size="44" letter-spacing="3" fill="#effffc">FUTSTANCY</text>',
   '<text x="66" y="125" font-family="Lato" font-size="17" fill="#70cbbc">CLUBE  /  ESCALACAO TATICA</text>',
   '<rect x="674" y="62" width="267" height="61" rx="14" fill="#16393e" stroke="#3b9d98"/>',
   '<text x="808" y="101" font-family="Lato" font-size="28" text-anchor="middle" fill="#d6fff4">4 - 3 - 3</text>',
-  '<rect x="51" y="165" width="922" height="1076" rx="23" fill="url(#grass)" stroke="#3aa99a" stroke-width="3"/>',
+  '<rect x="51" y="165" width="922" height="1076" rx="23" fill="url(#grass)" stroke="#38e5cb" stroke-opacity=".8" stroke-width="3"/>',
   '<rect x="54" y="168" width="916" height="1070" rx="20" fill="url(#stripes)"/>',
   '<g stroke="#b8ffea" stroke-opacity=".41" fill="none" stroke-width="3">',
   '<rect x="76" y="189" width="872" height="1030" rx="8"/><path d="M76 704H948"/><circle cx="512" cy="704" r="115"/>',
   '<circle cx="512" cy="704" r="4" fill="#c0fff3"/>',
   '<path d="M339 189V353H685V189 M394 189V243H630V189 M339 1219V1055H685V1219 M394 1219V1165H630V1219"/>',
   '</g>',
-  '<rect x="77" y="189" width="870" height="1030" fill="url(#glass)"/>',
+  '<rect x="77" y="189" width="870" height="1030" fill="url(#glass)" opacity=".7"/>',
   blocks,
-  '<rect x="51" y="1257" width="922" height="53" rx="13" fill="#123039" stroke="#3c7b7c"/>',
-  '<text x="81" y="1292" fill="#d4fcf1" font-family="Lato" font-size="23">',stats.occupied,'/11 TITULARES</text>',
+  '<rect x="51" y="1274" width="922" height="53" rx="13" fill="#123039" stroke="#3c7b7c"/>',
+  '<text x="81" y="1310" fill="#d4fcf1" font-family="Lato" font-size="23">',stats.occupied,'/11 TITULARES</text>',
   '<text x="500" y="1292" fill="#a5f4e7" font-family="Lato" font-size="21">OVR MEDIO ',stats.ovr||'--','</text>',
   '<text x="944" y="1292" text-anchor="end" fill="',missing?'#ffd68a':'#68efc5','" font-family="Lato" font-size="21">',missing?missing+' VAGAS':'COMPLETO','</text>',
   '</svg>',
@@ -123,7 +126,7 @@ export async function renderSquadImage(req:Request,env:Env):Promise<Response>{
     });
     const png=instance.render().asPng() as Uint8Array<ArrayBuffer>;
     return new Response(png,{headers:{
-      'content-type':'image/png','cache-control':'public,max-age=60',
+      'content-type':'image/png','cache-control':'public,max-age=45',
       'x-content-type-options':'nosniff',
     }});
   }catch(error){

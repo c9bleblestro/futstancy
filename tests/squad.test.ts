@@ -72,15 +72,17 @@ test('SVG do campo inclui 11 posições, jogadores reais e placeholders sem mold
   assert.match(svg,/11\/11 TITULARES/);
   assert.match(svg,/<image /);
   assert.ok(svg.includes('Bento'));
+  assert.match(svg,/preserveAspectRatio="xMidYMid meet"/);
+  assert.doesNotMatch(svg,/xMidYMid slice/);
   assert.ok(!svg.includes('assets/cards/'));
   assert.ok(!svg.includes('imagem antiga'));
   assert.equal(squadStats(rows).occupied,11);
   const url=squadImageUrl(owner,rows);
-  assert.match(url,/\/art\/squad\.png\?user=123456789012345678&rev=v58\./);
+  assert.match(url,/\/art\/squad\.png\?user=123456789012345678&rev=v59\./);
   assert.ok(!url.includes(rows[0].id));
   const missing=buildSquadSvg([]);
   assert.match(missing,/0\/11 TITULARES/);
-  assert.match(missing,/VAGA VAZIA/);
+  assert.match(missing,/VAGA LIVRE/);
   db.client.close();
 });
 

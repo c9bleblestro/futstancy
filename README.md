@@ -1,5 +1,14 @@
 # ⚽ FUTSTANCY — futebol no Discord
 
+## V5.9 — Perfil dinâmico e cartas originais em miniatura
+
+O **/fut perfil** usa dashboard gerado com **nome/avatar reais do Discord** e estatísticas atuais do **D1** (coins, resultados, gols e titulares). Os botões **Atualizar, Time, Coleção e Mercado** são componentes nativos do Discord fora da imagem; cada clique edita a mensagem original. Os dados do Discord são consultados via REST com fallback nos dados da interação.
+
+O **/fut time** mantém o 4-3-3 interativo, mas posiciona as cartas aprovadas **inteiras e proporcionais**, sem as caixas e recortes artificiais. Cartas sem arte aprovada não recuperam molduras antigas.
+
+Detalhes em [docs/PROFILE_SQUAD_V59.md](docs/PROFILE_SQUAD_V59.md). **Código atualizado no GitHub não confirma deploy; verificar o Worker /health versão 5.9.0.**
+
+
 ## V5.7 — Novas artes dos comandos
 
 Oito banners com temas diferentes de futebol substituem as capas repetitivas: **perfil, mercado, pacotes, time, partidas, ranking, recompensas e clube**. As cartas dos jogadores não mudaram. As imagens são geradas em `assets/ui/v57/` pelo script `scripts/render_ui_banners.py` e publicadas na `main` pela Action `ui-banners.yml`. Veja [docs/UI_V5_7.md](docs/UI_V5_7.md).

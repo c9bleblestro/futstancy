@@ -14,7 +14,7 @@ export function squadImageUrl(owner:string,rows:LineupRow[]):string {
   let hash=2166136261;
   for(let i=0;i<source.length;i++)hash=Math.imul(hash^source.charCodeAt(i),16777619);
   return ORIGIN+'/art/squad.png?user='+encodeURIComponent(owner)+
-    '&rev=v58.'+(hash>>>0).toString(36);
+    '&rev=v59.'+(hash>>>0).toString(36);
 }
 function summaryLine(rows:LineupRow[],owner:string,notice=''){
   const stats=squadStats(rows);
@@ -43,6 +43,7 @@ function nav(owner:string):object[]{
     button('🔁 Auto','team:auto:'+owner,2),
     button('📊 Resumo','team:summary:'+owner,2),
     button('📚 Coleção','team:collection:'+owner,2),
+    button('🪪 Perfil','profile:refresh:'+owner,2),
   ]);
 }
 export async function squadPanel(env:Env,owner:string,mode:'pitch'|'manage'|'summary'='pitch',notice=''){
@@ -75,7 +76,8 @@ export async function squadPanel(env:Env,owner:string,mode:'pitch'|'manage'|'sum
   const controls=manager
     ? [select,...rows([button('← Voltar ao campo','team:view:'+owner,2),
         button('🔁 Auto','team:auto:'+owner,1),
-        button('📚 Coleção','team:collection:'+owner,2)])].filter((item):item is object=>Boolean(item))
+        button('📚 Coleção','team:collection:'+owner,2),
+        button('🪪 Perfil','profile:refresh:'+owner,2)])].filter((item):item is object=>Boolean(item))
     : [select,viewPlayer,...nav(owner)].filter((item):item is object=>Boolean(item));
   return card(manager?'⚙️ Gerenciar escalação':'⚽ Campo tático 4-3-3',
     summaryLine(current,owner,notice),PURPLE,false,
