@@ -42,4 +42,4 @@ export const COMMANDS = [{
   name:'parar_sincronizacao',
   description:'🛑 Consulte ou encerre a sincronização (sem tarefa em segundo plano).',
   type:1,integration_types:[0],contexts:[0],default_member_permissions:'8',
-}];
+}] as const;
