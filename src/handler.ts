@@ -8,30 +8,30 @@ import { PACKS, PACK_TYPES, PACK_ODDS, PLAYABLE_ARTS, TIER_NAMES, GALLERY_TIERS,
 import type { Env, Interaction, Option } from './types.ts';
 
 const help = [
-  '-# Prefixo: **Sobter**, **Spacote ouro**, **Scolecao**  ·  Slash: **/s obter**',
+  '-# Prefixo: **Sobter**, **Spacote ouro**, **Scolecao**  ·  Slash: **/fut obter**',
   '### 🎮 COMEÇAR A JOGAR',
-  '**/s iniciar**  ›  Crie seu clube com 11 jogadores e 1.500 coins',
-  '**/s obter**  ›  Carta gratuita a cada 25 minutos',
-  '**/s daily**  ›  Receba 350 coins a cada 20 horas',
+  '**/fut iniciar**  ›  Crie seu clube com 11 jogadores e 1.500 coins',
+  '**/fut obter**  ›  Carta gratuita a cada 25 minutos',
+  '**/fut daily**  ›  Receba 350 coins a cada 20 horas',
   '',
   '### ✨ CARTAS E PACOTES',
-  '**/s pacote**  ›  Loja com 7 pacotes de raridades',
-  '**/s colecao**  ›  Suas cartas e edições permanentes',
-  '**/s artes**  ›  Galeria dos lotes e designs',
+  '**/fut pacote**  ›  Loja com 7 pacotes de raridades',
+  '**/fut colecao**  ›  Suas cartas e edições permanentes',
+  '**/fut artes**  ›  Galeria dos lotes e designs',
   '',
   '### ⚽ CLUBE E PARTIDAS',
-  '**/s time**  ›  Veja os 11 titulares do 4-3-3',
-  '**/s auto**  ›  Monte o melhor time disponível',
-  '**/s escalar**  ›  Troque um titular pelo ID da carta',
-  '**/s desafiar**  ›  Jogue contra outro membro',
-  '**/s perfil**  ›  Estatísticas e saldo do treinador',
-  '**/s ranking**  ›  Os 10 melhores clubes',
+  '**/fut time**  ›  Veja os 11 titulares do 4-3-3',
+  '**/fut auto**  ›  Monte o melhor time disponível',
+  '**/fut escalar**  ›  Troque um titular pelo ID da carta',
+  '**/fut desafiar**  ›  Jogue contra outro membro',
+  '**/fut perfil**  ›  Estatísticas e saldo do treinador',
+  '**/fut ranking**  ›  Os 10 melhores clubes',
   '',
   '### 💠 TRANSFERÊNCIAS',
-  '**/s mercado**  ›  Cartas anunciadas',
-  '**/s vender**  ›  Venda cartas fora do time',
-  '**/s comprar**  ›  Contrate pelo código do anúncio',
-  '**/s cancelar**  ›  Cancele um anúncio próprio',
+  '**/fut mercado**  ›  Cartas anunciadas',
+  '**/fut vender**  ›  Venda cartas fora do time',
+  '**/fut comprar**  ›  Contrate pelo código do anúncio',
+  '**/fut cancelar**  ›  Cancele um anúncio próprio',
 ].join('\n');
 
 function getOption(options: Option[], name: string): string | number | undefined {
@@ -39,7 +39,7 @@ function getOption(options: Option[], name: string): string | number | undefined
 }
 function actorId(i: Interaction): string | null { return i.member?.user?.id ?? i.user?.id ?? null; }
 const tag = (id: string) => `<@${id}>`;
-const needStart = () => card('⚽ Primeiro, crie seu clube', 'Use **/s iniciar** para receber seus 11 jogadores e começar com 1.500 coins.');
+const needStart = () => card('⚽ Primeiro, crie seu clube', 'Use **/fut iniciar** para receber seus 11 jogadores e começar com 1.500 coins.');
 
 const COLLECTION_FILTERS=['todas','comum','prata','ouro','icone','lendario','eclipse','legado'] as const;
 const isCollectionTier=(value:string):boolean=>COLLECTION_FILTERS.includes(value as typeof COLLECTION_FILTERS[number]);
@@ -90,7 +90,7 @@ async function showCollection(env:Env,owner:string,page:number,tier='todas'){
     '-# '+TIER_NAMES[selected]+'  •  Página '+(safe+1)+'/'+data.pages+
     '  •  '+ALBUM_PAGE_SIZE+' cartas por página\n\n'+
     (data.cards.length?'**Escolha uma carta no menu abaixo** para consultar atributos, ID e ações.':
-      'Nenhuma carta nesta categoria. Conquiste cartas com /s obter ou /s pacote.')+
+      'Nenhuma carta nesta categoria. Conquiste cartas com /fut obter ou /fut pacote.')+
     '\n-# Repetidas contam como cartas, mas não aumentam os atletas descobertos.';
   const pick=data.cards.length?[stringSelect('colview:'+owner+':'+selected+':'+safe,
     '🃏 Escolher carta e abrir detalhes',
@@ -159,7 +159,7 @@ async function showTeam(env:Env,owner:string){
     '**🛡️ DEFESA**\n'+format(1,5)+'\n\n'+
     '**🎯 MEIO-CAMPO**\n'+format(5,8)+'\n\n'+
     '**⚡ ATAQUE**\n'+format(8,11)+'\n\n'+
-    '-# Altere titulares em /s escalar ou monte seu melhor elenco abaixo.';
+    '-# Altere titulares em /fut escalar ou monte seu melhor elenco abaixo.';
   return card('⚽ Seu time titular',description,PURPLE,true,
     rows([button('⚙️ Melhor escalação','auto:'+owner,1)]),
     [...all].sort((a,b)=>a.slot-b.slot).map(c=>editionArtUrl(c.player_key,c.edition)).filter(Boolean));
@@ -171,7 +171,7 @@ async function showMarket(env:Env,tier='todas'){
   const filters=COLLECTION_FILTERS.map(t=>button(TIER_NAMES[t],'mkt:'+t));
   if(!listings.length)return card('🛒 Mercado de transferências',
     '**NENHUM ANÚNCIO ENCONTRADO**\n\nNão existem cartas à venda na raridade **'+TIER_NAMES[selected]+'**.\n'+
-    '-# Quer vender uma carta? Use /s vender.',GOLD,false,rows(filters),[]);
+    '-# Quer vender uma carta? Use /fut vender.',GOLD,false,rows(filters),[]);
   const content=listings.map((l,i)=>{
     const p=getPlayer(l.player_key);
     return '**'+String(i+1).padStart(2,'0')+'  ·  '+(p?.name??'Jogador')+'**   •   '+(TIER_NAMES[l.tier]??l.tier)+
@@ -210,24 +210,24 @@ function showOpenedPack(type:PackType,result:Awaited<ReturnType<typeof openPack>
   return card('📦 '+PACKS[type].label+' aberto!',
     '**3 cartas adicionadas à sua coleção.**\n'+
     '🪙 Valor pago: **'+result.cost.toLocaleString('pt-BR')+' coins**\n\n'+
-    lines.join('\n\n')+'\n\n-# As edições ficam associadas aos IDs. Veja /s colecao.',
+    lines.join('\n\n')+'\n\n-# As edições ficam associadas aos IDs. Veja /fut colecao.',
     GOLD,false,[],result.cards.map(c=>editionArtUrl(c.player.key,c.edition)));
 }
 
-export async function handleInteraction(i: Interaction, env: Env): Promise<object> {
+async function dispatchInteraction(i: Interaction, env: Env): Promise<object> {
   const uid = actorId(i);
   if (!uid) return message('Não consegui identificar seu usuário do Discord.', true);
 
   if(i.type===5 && (i.data?.custom_id??'').startsWith('colprice:')){
     const [,owner,cardId,tier,pageRaw]=(i.data?.custom_id??'').split(':');
-    if(uid!==owner)return message('Este anúncio não pertence a você.');
+    if(uid!==owner)return message('Este anúncio não pertence a você.',true);
     const rawPrice=i.data?.components?.flatMap(row=>[
       ...(row.component?[row.component]:[]),...(row.components??[]),
     ]).find(input=>input.custom_id==='price')?.value??'';
-    if(!/^\d{3,6}$/.test(rawPrice))return message('Informe um valor inteiro de 100 a 200000 coins.');
+    if(!/^\d{3,6}$/.test(rawPrice))return message('Informe um valor inteiro de 100 a 200000 coins.',true);
     const price=Number(rawPrice);
     if(!Number.isInteger(price)||price<100||price>200000)
-      return message('O preço deve ficar entre 100 e 200.000 coins.');
+      return message('O preço deve ficar entre 100 e 200.000 coins.',true);
     const result=await listCard(env.DB,uid,cardId,price);
     const safePage=Math.max(0,Math.trunc(Number(pageRaw)||0));
     return result.ok
@@ -330,7 +330,7 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
           '**VISITANTE**  '+tag(result.away_id)+'\n\n'+
           '**⭐ FORÇA DAS EQUIPES**\n'+r.powerHome+' OVR  ×  '+r.powerAway+' OVR\n\n'+
           '🪙 **RECOMPENSAS**\nVitória: 180  ·  Empate: 80  ·  Derrota: 40 coins\n\n'+
-          '-# Confira sua posição em /s ranking.';
+          '-# Confira sua posição em /fut ranking.';
         return update('🏟️ Resultado da partida',summary,GREEN,[]);
       }
       return message(`❌ ${r.state}`, true);
@@ -355,11 +355,11 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
           '🃏 **11 cartas** de jogadores\n'+
           '⚽ **4-3-3** já escalado\n\n'+
           '**PRÓXIMOS PASSOS**\n'+
-          'Use **/s time** para conhecer os titulares e **/s obter** para ganhar outra carta.',
+          'Use **/fut time** para conhecer os titulares e **/fut obter** para ganhar outra carta.',
           GREEN,false)
       : card('⚽ Clube já existente',
           'Sua equipe e seu progresso estão preservados.\n\n'+
-          '**/s time**  ›  Titulares\n**/s colecao**  ›  Suas cartas\n**/s perfil**  ›  Saldo e estatísticas.',
+          '**/fut time**  ›  Titulares\n**/fut colecao**  ›  Suas cartas\n**/fut perfil**  ›  Saldo e estatísticas.',
           PURPLE,true);
   }
   if (action === 'artes') return showGallery(uid,0,'cards');
@@ -396,7 +396,7 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
       '🟢 '+me.wins+' vitórias   ⚪ '+me.draws+' empates   🔴 '+me.losses+' derrotas\n\n'+
       '**⚽ ESTATÍSTICAS**\n'+
       me.goals_for+' gols marcados   •   '+me.goals_against+' gols sofridos\n\n'+
-      '-# Melhore a equipe com /s colecao e /s time.',
+      '-# Melhore a equipe com /fut colecao e /fut time.',
       PURPLE,true);
   }
   if(action==='obter'){
@@ -413,7 +413,7 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
       : card('⏳ Carta ainda indisponível',
           'Você já recebeu seu jogador gratuito.\n\n'+
           '**PRÓXIMA OBTENÇÃO**\n⏱️ **'+timeRemaining(result.left)+'**\n\n'+
-          '-# Use /s colecao para acompanhar seus jogadores.',PURPLE);
+          '-# Use /fut colecao para acompanhar seus jogadores.',PURPLE);
   }
   if(action==='daily'){
     const result=await daily(env.DB,uid);
@@ -434,7 +434,7 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
     const result=await openPack(env.DB,uid,type);
     return result.ok?showOpenedPack(type,result):
       card('💸 Saldo insuficiente','Pacote '+PACKS[type].label+': **'+PACKS[type].cost.toLocaleString('pt-BR')+
-        ' coins** necessários.\nUse **/s daily** ou jogue partidas.',ERROR);
+        ' coins** necessários.\nUse **/fut daily** ou jogue partidas.',ERROR);
   }
   if(action==='colecao')return showCollection(env,uid,0,String(getOption(args,'raridade')??'todas'));
   if (action === 'time') return showTeam(env, uid);
@@ -445,17 +445,17 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
   if (action === 'escalar') {
     const id = String(getOption(args, 'id') ?? '').trim();
     const slot = Number(getOption(args, 'vaga'));
-    if (!/^[a-f0-9]{16}$/.test(id)) return message('ID inválido. Copie o ID de **/s colecao**.');
+    if (!/^[a-f0-9]{16}$/.test(id)) return message('ID inválido. Copie o ID de **/fut colecao**.');
     return message(await setSlot(env.DB, uid, id, slot));
   }
   if(action==='desafiar'){
     const opponent=String(getOption(args,'membro')??'');
     if(!/^\d{15,22}$/.test(opponent)||uid===opponent)return message('Selecione um adversário válido e diferente de você.');
     const other=await account(env.DB,opponent);
-    if(!other)return message('O adversário ainda não criou o clube. Oriente-o a usar /s iniciar.');
+    if(!other)return message('O adversário ainda não criou o clube. Oriente-o a usar /fut iniciar.');
     const [myLineup,theirLineup]=await Promise.all([lineup(env.DB,uid),lineup(env.DB,opponent)]);
     const home=lineupPlayers(myLineup),away=lineupPlayers(theirLineup);
-    if(!home||!away)return message('Os dois clubes precisam de 11 titulares. Use /s auto.');
+    if(!home||!away)return message('Os dois clubes precisam de 11 titulares. Use /fut auto.');
     const match=await createChallenge(env.DB,uid,opponent);
     return card('⚔️ Convite para partida',
       '**'+tag(uid)+'**\n### VS\n**'+tag(opponent)+'**\n\n'+
@@ -470,7 +470,7 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
   if(action==='vender'){
     const id=String(getOption(args,'id')??'');
     const price=Number(getOption(args,'preco'));
-    if(!/^[a-f0-9]{16}$/.test(id))return message('ID de carta inválido. Consulte /s colecao.');
+    if(!/^[a-f0-9]{16}$/.test(id))return message('ID de carta inválido. Consulte /fut colecao.');
     const result=await listCard(env.DB,uid,id,price);
     return result.ok
       ? card('🏷️ Anúncio publicado',
@@ -478,7 +478,7 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
           '**PREÇO DE VENDA**   🪙 '+price.toLocaleString('pt-BR')+' coins\n'+
           '**VALOR LÍQUIDO**   🪙 '+Math.floor(price*0.95).toLocaleString('pt-BR')+' coins\n'+
           '**CÓDIGO**   '+String.fromCharCode(96)+result.id+String.fromCharCode(96)+
-          '\n\n-# Taxa de 5% ao vender. Para retirar, use /s cancelar.',
+          '\n\n-# Taxa de 5% ao vender. Para retirar, use /fut cancelar.',
           GREEN,true,[],[])
       : message('Não foi possível anunciar. Verifique se a carta é sua, se está fora do time e se não possui outro anúncio.');
   }
@@ -488,11 +488,11 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
     return ok
       ? card('✅ Anúncio cancelado',
           'A carta voltou a ficar disponível para seu clube.\n\n'+
-          '-# Você pode escalá-la com /s escalar ou anunciá-la novamente.',GREEN,true,[],[])
+          '-# Você pode escalá-la com /fut escalar ou anunciá-la novamente.',GREEN,true,[],[])
       : card('❌ Não foi possível cancelar',
           'O código não existe, não pertence a você ou já foi encerrado.',ERROR,true,[],[]);
   }
-  return message('Comando não encontrado. Use **/s ajuda**.');
+  return message('Comando não encontrado. Use **/fut ajuda**.');
 }
 
 async function handleBuy(env:Env,uid:string,id:string){
@@ -504,9 +504,31 @@ async function handleBuy(env:Env,uid:string,id:string){
         '**'+(result.player?.name??'Jogador')+'** foi contratado!\n\n'+
         '**EDIÇÃO**   '+(TIER_NAMES[result.tier??'legado']??'Clássica')+'\n'+
         '**VALOR PAGO**   🪙 '+result.price?.toLocaleString('pt-BR')+' coins\n\n'+
-        '-# A arte e a edição permanecem vinculadas ao exemplar. Confira /s colecao.',
+        '-# A arte e a edição permanecem vinculadas ao exemplar. Confira /fut colecao.',
         GREEN,true,[],result.player?[editionArtUrl(result.player.key,result.edition??'legado')]:[])
     : card('❌ Transferência não concluída',
         'Verifique se o anúncio está ativo, se você tem coins suficientes e se a carta não é sua.',
         ERROR,true,[],[]);
+}
+
+
+/** Mantém mensagens públicas no canal e atualiza o mesmo painel ao clicar.
+ * Falhas de permissão respondem individualmente (ephemeral) para não permitir
+ * que terceiros alterem a mensagem pública de outro jogador.
+ */
+export async function handleInteraction(i:Interaction,env:Env):Promise<object> {
+  const reply=await dispatchInteraction(i,env);
+  if(i.type!==3&&i.type!==5)return reply;
+  const callback=reply as {
+    type?:number;
+    data?:{flags?:number;components?:object[];allowed_mentions?:{parse:string[]}};
+  };
+  // Modal (type 9) and existing update (type 7) pass through as-is.
+  if(callback.type!==4||!Array.isArray(callback.data?.components))return reply;
+  if(((callback.data.flags??0)&64)!==0)return reply;
+  return {type:7,data:{
+    flags:32768,
+    components:callback.data.components,
+    allowed_mentions:{parse:[]},
+  }};
 }
