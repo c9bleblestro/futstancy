@@ -174,7 +174,9 @@ test('álbum V5: oito miniaturas por página e progresso inclui atletas clássic
   const detail=await handleInteraction(sender({custom_id:menu.custom_id,values:[menu.options[0].value]},3),{DB:db} as Env) as any;
   assert.match(JSON.stringify(detail),/Ficha da carta/);
   assert.match(JSON.stringify(detail),new RegExp(menu.options[0].value));
-  assert.equal(flatten(detail.data.components).filter(x=>x.type===12).length,1);
+  const detailArt=flatten(detail.data.components).filter(x=>x.type===12);
+  assert.ok(detailArt.length<=1); // Legado sem arte completa não pode usar molduras antigas.
+  if(detailArt.length)assert.match(JSON.stringify(detailArt),/assets\/editions/);
   const filtered=await handleInteraction(sender({custom_id:'colfilter:'+owner,values:['legado']},3),{DB:db} as Env) as any;
   assert.match(JSON.stringify(filtered),/Clássica/);
   const forbidden=await handleInteraction({
