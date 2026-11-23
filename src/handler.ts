@@ -2,6 +2,7 @@ import { getPlayer, PLAYERS } from './catalog.ts';
 import {squadPanel,squadCandidates,squadDetail} from './squad-ui.ts';
 import {profilePanel} from './profile-ui.ts';
 import { COMMAND_ROOT } from './commands.ts';
+import {handleAdminSync,isAdminSyncName} from './admin-sync.ts';
 import { SLOT_POSITION, timeRemaining, teamStrength } from './game.ts';
 import { account, start, claim, daily, collectionPage, ALBUM_PAGE_SIZE, lineup, lineupPlayers, autoLineup, setSlot, createChallenge, resolveChallenge, openPack, marketPage, listCard, buyCard, cancelListing, leaderboard } from './storage.ts';
 import { card, message, update, rows, button, stringSelect, GOLD, GREEN, ERROR, PURPLE } from './ui.ts';
@@ -203,6 +204,7 @@ function showOpenedPack(type:PackType,result:Awaited<ReturnType<typeof openPack>
 }
 
 async function dispatchInteraction(i: Interaction, env: Env): Promise<object> {
+  if(i.type===2&&isAdminSyncName(i.data?.name))return handleAdminSync(i,env);
   const uid = actorId(i);
   if (!uid) return message('Não consegui identificar seu usuário do Discord.', true);
 
