@@ -238,6 +238,17 @@ test('painéis do álbum, mercado e pacotes são públicos; navegação atualiza
   const detail=await handleInteraction(component(pick.custom_id,[pick.options[0].value]),env) as any;
   assert.equal(detail.type,7);
   assert.match(JSON.stringify(detail.data.components),/Ficha da carta/);
+  const marketButton=await handleInteraction(component('mktowner:'+owner+':todas'),env) as any;
+  assert.equal(marketButton.type,7);
+  const foreignClick=await handleInteraction({
+    ...component('mktowner:'+owner+':todas'),
+    member:{user:{id:'345678901234567890',username:'other'}},
+  },env) as any;
+  assert.equal(foreignClick.type,4);
+  assert.equal(foreignClick.data.flags&64,64);
+  const invalidPurchase=await handleInteraction(component('buy:0123456789abcdef'),env) as any;
+  assert.equal(invalidPurchase.type,4);
+  assert.equal(invalidPurchase.data.flags&64,64);
   const market=await handleInteraction(slash('mercado'),env) as any;
   assert.equal(market.type,4);
   assert.equal(market.data.flags&64,0);
