@@ -1,0 +1,55 @@
+name: Publicar artes de sistemas Futstancy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/render_ui_banners.py'
+      - '.github/workflows/ui-banners.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: futstancy-ui-banners
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Obter codigo
+        uses: actions/checkout@v4
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar Pillow
+        run: python -m pip install --disable-pip-version-check Pillow==11.3.0
+      - name: Gerar as oito artes
+        run: python scripts/render_ui_banners.py
+      - name: Verificar os arquivos de imagem
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          paths = sorted(Path("assets/ui/v57").glob("*.jpg"))
+          assert len(paths) == 8, f"Esperadas 8 artes: {len(paths)}"
+          for path in paths:
+              with Image.open(path) as im:
+                  assert im.size == (800, 200), (path, im.size)
+                  im.verify()
+              print(path, path.stat().st_size)
+          PY
+      - name: Publicar capas no GitHub
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/ui/v57/
+          if ! git diff --cached --quiet; then
+            git commit -m 'assets(ui): publish 8 Futstancy cinematic command banners'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
