@@ -36,7 +36,7 @@ test('cartas reais e botões ficam dentro do mesmo painel V2',()=>{
 
 test('mercado, conquistas e erros recebem cores de contexto',()=>{
   assert.equal(visualTheme('🛒 Mercado de transferências').color,0x38bdf8);
-  assert.equal(visualTheme('🗂️ Sua coleção').color,0x9167ff);
+  assert.equal(visualTheme('🗂️ Sua coleção').color,0x2dd4bf);
   assert.equal((card('Erro','Falha',ERROR).data.components[0] as any).accent_color,ERROR);
   assert.equal((card('Sucesso','OK',GREEN).data.components[0] as any).accent_color,GREEN);
 });
