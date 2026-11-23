@@ -28,8 +28,8 @@ export interface Interaction {
   application_id?: string;
   token?: string;
   guild_id?: string;
-  member?: { user?: { id: string; username: string } };
-  user?: { id: string; username: string };
+  member?: { nick?:string|null; avatar?:string|null; user?: { id: string; username: string; global_name?:string|null; avatar?:string|null } };
+  user?: { id: string; username: string; global_name?:string|null; avatar?:string|null };
   data?: { name?: string; options?: Option[]; custom_id?: string; values?: string[]; components?: { type?: number; component?: { type?: number; custom_id?: string; value?: string }; components?: { type?: number; custom_id?: string; value?: string }[] }[] };
 }
 export interface Account {
