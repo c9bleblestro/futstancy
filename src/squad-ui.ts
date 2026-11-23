@@ -14,7 +14,7 @@ export function squadImageUrl(owner:string,rows:LineupRow[]):string {
   let hash=2166136261;
   for(let i=0;i<source.length;i++)hash=Math.imul(hash^source.charCodeAt(i),16777619);
   return ORIGIN+'/art/squad.png?user='+encodeURIComponent(owner)+
-    '&rev=v59.'+(hash>>>0).toString(36);
+    '&rev=v591.'+(hash>>>0).toString(36);
 }
 function summaryLine(rows:LineupRow[],owner:string,notice=''){
   const stats=squadStats(rows);

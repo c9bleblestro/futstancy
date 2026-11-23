@@ -68,6 +68,25 @@ async function avatarPicture(url:string|null,fetcher:FetchFn=fetch):Promise<stri
   }catch{return null;}
 }
 
+/**
+ * Foto original do catálogo, não é uma carta fabricada nem a antiga moldura.
+ * Usada no destaque só quando o titular ainda não tem arte individual aprovada.
+ */
+async function catalogPortrait(playerKey:string):Promise<string|null>{
+  if(!/^[a-z0-9_-]{2,40}$/.test(playerKey))return null;
+  const url='https://raw.githubusercontent.com/c9bleblestro/futstancy/main/assets/portraits/'+
+    encodeURIComponent(playerKey)+'.jpg';
+  try{
+    const res=await fetch(url,{headers:{Accept:'image/jpeg'},signal:AbortSignal.timeout(4500)});
+    if(!res.ok||!/image\/jpe?g/i.test(res.headers.get('content-type')??''))return null;
+    const size=Number(res.headers.get('content-length')??'0');
+    if(size>200000)return null;
+    const bytes=new Uint8Array(await res.arrayBuffer());
+    if(bytes.length<200||bytes.length>200000)return null;
+    return 'data:image/jpeg;base64,'+binary64(bytes);
+  }catch{return null;}
+}
+
 export function buildProfileSvg(me:Account,rows:LineupRow[],identity:DiscordIdentity,
   pictures:ProfileImages={}):string{
   const played=me.wins+me.draws+me.losses;
@@ -172,7 +191,10 @@ export async function renderProfileImage(req:Request,env:Env):Promise<Response>{
     identity.avatarUrl=fallback.avatarUrl;
   }
   const avatar=await avatarPicture(identity.avatarUrl);
-  const svg=buildProfileSvg(me,rows,identity,{avatar,star:art});
+  // O melhor titular pode ser uma carta clássica sem arte aprovada (ex.: Rafael Leão).
+  // Nesse caso usamos sua foto original do catálogo, sem inventar outra carta.
+  const highlight=art??(best?await catalogPortrait(best.player_key):null);
+  const svg=buildProfileSvg(me,rows,identity,{avatar,star:highlight});
   try{
     const [{Resvg},bytes]=await Promise.all([import('@cf-wasm/resvg/workerd'),font()]);
     const result=await Resvg.async(svg,{fitTo:{mode:'original'},

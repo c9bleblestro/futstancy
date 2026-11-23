@@ -7,7 +7,7 @@ import {start,lineup,setSlot,ownedCards} from '../src/storage.ts';
 import {chooseTeam,SLOT_POSITION} from '../src/game.ts';
 import {getPlayer} from '../src/catalog.ts';
 import {TACTICAL_433,compatibleSlot,squadStats} from '../src/squad-layout.ts';
-import {buildSquadSvg,renderSquadImage} from '../src/squad-image.ts';
+import {buildSquadSvg,renderSquadImage,renderSquadWithFallback} from '../src/squad-image.ts';
 import {squadImageUrl,squadPanel,squadCandidates,squadDetail} from '../src/squad-ui.ts';
 import {handleInteraction} from '../src/handler.ts';
 import type {Database,Statement,Env,Interaction} from '../src/types.ts';
@@ -78,7 +78,7 @@ test('SVG do campo inclui 11 posições, jogadores reais e placeholders sem mold
   assert.ok(!svg.includes('imagem antiga'));
   assert.equal(squadStats(rows).occupied,11);
   const url=squadImageUrl(owner,rows);
-  assert.match(url,/\/art\/squad\.png\?user=123456789012345678&rev=v59\./);
+  assert.match(url,/\/art\/squad\.png\?user=123456789012345678&rev=v591\./);
   assert.ok(!url.includes(rows[0].id));
   const missing=buildSquadSvg([]);
   assert.match(missing,/0\/11 TITULARES/);
@@ -184,5 +184,25 @@ test('listas de jogadores compatíveis excluem cartas anunciadas e preservam ID'
   const detail=await squadDetail(env,owner,3) as any;
   assert.match(panelData(detail),/ID:/);
   assert.match(panelData(detail),/Substituir/);
+  db.client.close();
+});
+
+
+test('erro de miniaturas renderiza gramado substituto válido, preservando os titulares',async()=>{
+  const db=new SqlDB();await start(db,owner);
+  const rows=await lineup(db,owner);
+  let renders=0;
+  const result=await renderSquadWithFallback(rows,{[rows[0].id]:'data:image/jpeg;base64,AAECAw=='},async svg=>{
+    renders++;
+    if(renders===1)throw new Error('Falha simulada no decoder do JPEG');
+    return svg;
+  });
+  assert.equal(renders,2);
+  assert.equal(result.mode,'fallback');
+  assert.match(result.png,/FUTSTANCY/);
+  assert.match(result.png,/11\/11 TITULARES/);
+  assert.doesNotMatch(result.png,/<image /);
+  const okay=await renderSquadWithFallback(rows,{},async svg=>svg);
+  assert.equal(okay.mode,'full');
   db.client.close();
 });

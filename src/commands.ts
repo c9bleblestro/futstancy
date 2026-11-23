@@ -4,7 +4,7 @@ const int = (name: string, description: string, min = 1, max = 200000) => ({ typ
 const user = (name: string, description: string) => ({ type: 6, name, description, required: true });
 
 export const COMMAND_ROOT = 'fut';
-export const COMMAND_VERSION = 'v5.9.0-profile-and-squad';
+export const COMMAND_VERSION = 'v5.9.1-squad-reliability';
 const tiers=[{name:'Todas',value:'todas'},{name:'Comum',value:'comum'},{name:'Prata',value:'prata'},{name:'Ouro',value:'ouro'},{name:'Ícone',value:'icone'},{name:'Lendário',value:'lendario'},{name:'Eclipse',value:'eclipse'},{name:'Clássica/Legado',value:'legado'}];
 const packs=[{name:'Misto — 900 coins',value:'misto'},{name:'Comum — 450',value:'comum'},{name:'Prata — 900',value:'prata'},{name:'Ouro — 2100',value:'ouro'},{name:'Ícone — 4500',value:'icone'},{name:'Lendário — 8500',value:'lendario'},{name:'Eclipse — 12500',value:'eclipse'}];
 const select=(name:string,description:string,choices:{name:string;value:string}[])=>({type:3,name,description,required:false,choices});
