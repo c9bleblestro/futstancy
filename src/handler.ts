@@ -105,7 +105,7 @@ async function showCollection(env:Env,owner:string,page:number,tier='todas'){
   const actions=rows([
     button('◀ Anterior','col:'+owner+':'+selected+':'+(safe-1),2,safe===0),
     button('Próxima página ▶','col:'+owner+':'+selected+':'+(safe+1),1,safe>=data.pages-1),
-    button('🛒 Mercado','mkt:todas',2),
+    button('🛒 Mercado','mktowner:'+owner+':todas',2),
     button('🎨 Galeria','art:'+owner+':cards:todas:0',2),
   ]);
   return card('📚 Álbum Futstancy',summary,PURPLE,true,[...pick,filter,...actions],
@@ -307,6 +307,12 @@ async function dispatchInteraction(i: Interaction, env: Env): Promise<object> {
       const result=await openPack(env.DB,uid,type);
       if(!result.ok)return message('Saldo insuficiente. O pacote '+PACKS[type].label+' custa '+PACKS[type].cost.toLocaleString('pt-BR')+' coins.',true);
       return showOpenedPack(type,result);
+    }
+    if(id.startsWith('mktowner:')) {
+      const [,owner,tier]=id.split(':');
+      if(owner!==uid)return message('Esse álbum pertence a outro jogador.',true);
+      if(!isCollectionTier(tier))return message('Filtro inválido.',true);
+      return showMarket(env,tier);
     }
     if(id.startsWith('mkt:')) {
       const tier=id.slice(4);
