@@ -9,9 +9,12 @@ import type {Env,LineupRow,CardRow} from './types.ts';
 const ORIGIN='https://futstancy.likeparaopeixe.workers.dev';
 const CANDIDATE_PAGE_SIZE=20;
 export function squadImageUrl(owner:string,rows:LineupRow[]):string {
-  const rev=rows.map(r=>r.slot+'-'+r.id).join('.');
+  // Cache key muda com a escalação, sem expor os IDs individuais da coleção na URL.
+  const source=rows.map(r=>r.slot+'-'+r.id).join('.');
+  let hash=2166136261;
+  for(let i=0;i<source.length;i++)hash=Math.imul(hash^source.charCodeAt(i),16777619);
   return ORIGIN+'/art/squad.png?user='+encodeURIComponent(owner)+
-    '&rev='+encodeURIComponent('v58.'+rev);
+    '&rev=v58.'+(hash>>>0).toString(36);
 }
 function summaryLine(rows:LineupRow[],owner:string,notice=''){
   const stats=squadStats(rows);
