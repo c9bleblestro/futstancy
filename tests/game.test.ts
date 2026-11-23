@@ -54,9 +54,9 @@ test('botões são distribuídos em linhas de 5', () => {
 });
 
 
-test('o prefixo principal dos comandos Discord é S (/s)', () => {
-  assert.equal(COMMAND_ROOT, 's');
+test('slash principal Discord é /fut; S é reservado para mensagens', () => {
+  assert.equal(COMMAND_ROOT, 'fut');
   assert.equal(COMMANDS.length, 1);
-  assert.equal(COMMANDS[0].name, 's');
+  assert.equal(COMMANDS[0].name, 'fut');
   assert.ok(COMMANDS[0].options.length >= 17);
 });

@@ -6,7 +6,7 @@ Mensagens comuns no canal (sem barra): `Siniciar`, `Sobter`, `Sdaily`, `Sajuda`,
 
 Com argumentos: `Spacote ouro`, `Spacote lendário`, `Scolecao prata`, `Smercado icone`, `Sescalar <ID-da-carta> 9`, `Sdesafiar @membro`, `Svender <ID> 1500`, `Scomprar <codigo>`, `Scancelar <codigo>`. Espaço após o S também é aceito: `S pacote ouro`, `S obter`.
 
-Os slash commands continuam funcionando (`/s obter`, `/s pacote`, etc.). A resposta a uma mensagem comum é uma mensagem pública do bot, não ephemeral. O Gateway responde à mensagem do usuário com os mesmos painéis Components V2.
+Slash commands usam **`/fut`** (`/fut obter`, `/fut pacote`, etc.); o prefixo **S** funciona apenas em mensagens normais. A resposta a uma mensagem comum é uma mensagem pública do bot, não ephemeral. O Gateway responde à mensagem do usuário com os mesmos painéis Components V2.
 
 ## Por que o prefixo não funcionava
 

@@ -1,9 +1,10 @@
-import { COMMANDS, COMMAND_ROOT } from './commands.ts';
+import { COMMANDS } from './commands.ts';
 import type { Option } from './types.ts';
 
 export interface ParsedPrefixCommand { name: string; options: Option[]; }
 export type PrefixParseResult = ParsedPrefixCommand | { error: string } | null;
 
+const TEXT_PREFIX = 's'; // Comandos de mensagem; slash /fut é separado.
 const commandNames = new Set(COMMANDS[0].options.map(x => x.name));
 const packTypes = new Set(['misto','comum','prata','ouro','icone','lendario','eclipse']);
 const rarities = new Set(['todas','comum','prata','ouro','icone','lendario','eclipse','legado']);
@@ -16,7 +17,7 @@ const numberOption = (name:string,value:number):Option => ({ name,value,type:4 }
 export function parseTextPrefix(content: string):PrefixParseResult {
   if (typeof content !== 'string' || content.length>2000) return null;
   const input=content.trim();
-  if (!input || normalize(input[0])!==COMMAND_ROOT || input.startsWith('/')) return null;
+  if (!input || normalize(input[0])!==TEXT_PREFIX || input.startsWith('/')) return null;
   const rest=input.slice(1).trim();
   if (!rest) return {name:'ajuda',options:[]};
   const [rawName,...args]=rest.split(/\s+/);
