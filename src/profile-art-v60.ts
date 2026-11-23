@@ -36,7 +36,7 @@ export function buildPremiumProfileSvg(me:Account,rows:LineupRow[],identity:Iden
     : '<circle cx="170" cy="254" r="88" fill="#143943"/><circle cx="170" cy="238" r="34" fill="#69ded2"/>'+
       '<path d="M101 319Q101 259 170 259Q239 259 239 319Z" fill="#59b4b8"/>';
   const starImg=hasCard
-    ? '<image x="746" y="999" width="189" height="215" preserveAspectRatio="xMidYMid meet" href="'+media.star+'"/>'
+    ? '<image x="746" y="1017" width="189" height="195" preserveAspectRatio="xMidYMid meet" href="'+media.star+'"/>'
     : '<g><path d="M785 1020L895 1020L911 1040L898 1181L840 1213L781 1181L769 1040Z"'+
       ' fill="#0b3037" stroke="#47e6d2" stroke-width="3"/>'+
       text(840,1104,'F',49,'#62d9c9','text-anchor="middle"')+
@@ -111,6 +111,7 @@ export function buildPremiumProfileSvg(me:Account,rows:LineupRow[],identity:Iden
     '<path d="M361 859V935M707 859V935" stroke="#32dfce" stroke-opacity=".65"/>',
     panel(34,972,956,267),
     text(76,1018,'ELENCO TITULAR',25,'#f6fffd','font-weight="700" letter-spacing="1"'),
+    text(356,1018,'MELHOR TITULAR: '+(top?cut(top.name,12)+' '+top.ovr:'--'),15,'#b5eddd'),
     '<path d="M670 992V1218" stroke="#46bfb2" stroke-opacity=".8"/>',
     '<rect x="59" y="1038" width="592" height="179" rx="17" fill="#083139" stroke="#31dbc4" stroke-opacity=".40"/>',
     text(90,1077,'FORMAÇÃO',19,'#b2dcd9'),
@@ -120,7 +121,7 @@ export function buildPremiumProfileSvg(me:Account,rows:LineupRow[],identity:Iden
     text(94,1221,String(stats.ovr||'--'),38,'#61ffe1'),
     text(337,1186,'TITULARES',16,'#a4d9d5'),
     text(337,1221,stats.occupied+'/11',38,'#ffffff'),
-    text(835,1017,'MELHOR TITULAR',17,'#ffe4a4','text-anchor="middle" letter-spacing="1"'),
+    text(835,1010,'CARTA EM DESTAQUE',17,'#ffe4a4','text-anchor="middle" letter-spacing="1"'),
     starImg,
     text(835,1235,feature?cut(feature.name,21):'SEM TITULAR',16,'#d8fff6','text-anchor="middle"'),
     '</svg>'
