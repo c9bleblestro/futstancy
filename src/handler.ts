@@ -1,4 +1,4 @@
-import { getPlayer } from './catalog.ts';
+import { getPlayer, PLAYERS } from './catalog.ts';
 import { COMMAND_ROOT } from './commands.ts';
 import { SLOT_POSITION, timeRemaining, teamStrength } from './game.ts';
 import { account, start, claim, daily, collectionPage, ALBUM_PAGE_SIZE, lineup, lineupPlayers, autoLineup, setSlot, createChallenge, resolveChallenge, openPack, marketPage, listCard, buyCard, cancelListing, leaderboard } from './storage.ts';
@@ -80,18 +80,18 @@ async function showCollection(env:Env,owner:string,page:number,tier='todas'){
   const selected=isCollectionTier(tier)?tier:'todas';
   const data=await collectionPage(env.DB,owner,page,selected);
   const safe=Math.min(Math.max(0,Number.isFinite(page)?Math.trunc(page):0),data.pages-1);
-  const available=selected==='legado'?0:
-    (selected==='todas'?PLAYABLE_ARTS.length:PLAYABLE_ARTS.filter(a=>a.tier===selected).length);
+  const available=(selected==='todas'||selected==='legado')?PLAYERS.length:
+    new Set(PLAYABLE_ARTS.filter(a=>a.tier===selected).map(a=>a.player.key)).size;
   const progress=available?Math.min(12,Math.round(data.discovered/available*12)):0;
   const meter=available?'▰'.repeat(progress)+'▱'.repeat(12-progress):'';
   const summary='**'+data.total+' cartas** no inventário  ·  **'+data.discovered+
-    (available?'/'+available:'')+' edições distintas'+
+    (available?'/'+available:'')+' atletas descobertos'+
     '\n'+(available?meter+'   '+Math.min(100,Math.round(data.discovered/available*100))+'%\n':'')+
     '-# '+TIER_NAMES[selected]+'  •  Página '+(safe+1)+'/'+data.pages+
     '  •  '+ALBUM_PAGE_SIZE+' cartas por página\n\n'+
     (data.cards.length?'**Escolha uma carta no menu abaixo** para consultar atributos, ID e ações.':
       'Nenhuma carta nesta categoria. Conquiste cartas com /s obter ou /s pacote.')+
-    '\n-# Edições repetidas contam como exemplares, não como novas descobertas.';
+    '\n-# Repetidas contam como cartas, mas não aumentam os atletas descobertos.';
   const pick=data.cards.length?[stringSelect('colview:'+owner+':'+selected+':'+safe,
     '🃏 Escolher carta e abrir detalhes',
     data.cards.map((c,i)=>{
