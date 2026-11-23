@@ -108,6 +108,23 @@ export function buildSquadSvg(rows:LineupRow[],images:Readonly<Record<string,str
   ].join('');
 }
 
+/**
+ * Resvg pode rejeitar uma miniatura externa mesmo quando o SVG do gramado é válido.
+ * O segundo render mantém a formação, nomes e OVRs visíveis, sem imagem quebrada.
+ */
+export async function renderSquadWithFallback<T>(
+  rows:LineupRow[],images:Readonly<Record<string,string>>,
+  renderer:(svg:string)=>Promise<T>
+):Promise<{png:T;mode:'full'|'fallback'}>{
+  try{
+    return {png:await renderer(buildSquadSvg(rows,images)),mode:'full'};
+  }catch(error){
+    console.warn('[SQUAD IMAGE] Miniaturas não processadas; usando campo seguro:',
+      error instanceof Error?error.message:String(error));
+    return {png:await renderer(buildSquadSvg(rows,{})),mode:'fallback'};
+  }
+}
+
 export async function renderSquadImage(req:Request,env:Env):Promise<Response>{
   const url=new URL(req.url),owner=url.searchParams.get('user')??'';
   if(!/^\d{15,22}$/.test(owner))return new Response('Jogador inválido',{status:400});
@@ -117,16 +134,19 @@ export async function renderSquadImage(req:Request,env:Env):Promise<Response>{
     const art=await approvedArt(row.player_key,row.edition);
     if(art)images[row.id]=art;
   }));
-  const svg=buildSquadSvg(rows,images);
   try{
     const [{Resvg},bytes]=await Promise.all([import('@cf-wasm/resvg/workerd'),font()]);
-    const instance=await Resvg.async(svg,{
-      fitTo:{mode:'original'},
-      font:{fontBuffers:[bytes],loadSystemFonts:false,defaultFontFamily:'Lato',sansSerifFamily:'Lato'},
+    const result=await renderSquadWithFallback(rows,images,async svg=>{
+      const instance=await Resvg.async(svg,{
+        fitTo:{mode:'original'},
+        font:{fontBuffers:[bytes],loadSystemFonts:false,defaultFontFamily:'Lato',sansSerifFamily:'Lato'},
+      });
+      return instance.render().asPng() as Uint8Array<ArrayBuffer>;
     });
-    const png=instance.render().asPng() as Uint8Array<ArrayBuffer>;
-    return new Response(png,{headers:{
-      'content-type':'image/png','cache-control':'public,max-age=45',
+    return new Response(result.png,{headers:{
+      'content-type':'image/png',
+      'cache-control':result.mode==='full'?'public,max-age=45':'no-store',
+      'x-futstancy-image-mode':result.mode,
       'x-content-type-options':'nosniff',
     }});
   }catch(error){
