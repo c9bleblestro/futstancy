@@ -36,7 +36,7 @@ export async function collectionPage(db: Database, userId: string, page: number,
   const where = tier === 'todas' ? 'owner_id=?' : 'owner_id=? AND tier=?';
   const filter = tier === 'todas' ? [userId] : [userId, tier];
   const totals = await db.prepare(
-    'SELECT COUNT(*) AS n, COUNT(DISTINCT CASE WHEN tier<>\'legado\' THEN player_key || \':\' || edition END) AS discovered FROM cards WHERE ' + where
+    'SELECT COUNT(*) AS n, COUNT(DISTINCT player_key) AS discovered FROM cards WHERE ' + where
   ).bind(...filter).first<{ n: number; discovered: number }>();
   const total = totals?.n ?? 0;
   const discovered = totals?.discovered ?? 0;
