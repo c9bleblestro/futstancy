@@ -16,7 +16,7 @@ test('slash é /fut, prefixo S é apenas para mensagens normais',()=>{
   assert.equal(COMMAND_ROOT,'fut');
   assert.equal(COMMANDS.length,1);
   assert.equal(COMMANDS[0].name,'fut');
-  assert.match(COMMAND_VERSION,/5\.5/);
+  assert.match(COMMAND_VERSION,/5\.8/);
   const names=COMMANDS[0].options.map(c=>c.name);
   for(const sub of ['ajuda','iniciar','obter','daily','pacote','colecao','artes','time','auto','escalar','desafiar','perfil','ranking','mercado','vender','comprar','cancelar'])
     assert.ok(names.includes(sub),sub+' ausente');

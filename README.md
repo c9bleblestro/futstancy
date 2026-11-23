@@ -27,6 +27,15 @@ Selecionar uma carta abre sua ficha individual com arte, edição, ID e status; 
 
 Detalhes e restrições em [docs/ALBUM_V5_4.md](docs/ALBUM_V5_4.md).
 
+## ⚽ V5.8 — Escalação tática visual
+
+`/fut time` (ou `Stime` quando o Gateway estiver ativo) abre um **campo 4-3-3 verdadeiro**, gerado em PNG pelo Cloudflare Worker a partir das 11 cartas escaladas no D1. As cartas individuais aprovadas são posicionadas no gramado, com OVR, posição e nome; posições vagas mostram placeholders. A imagem se atualiza quando o lineup muda.
+
+O painel possui seletores de **vaga**, **titular**, **carta compatível** (20 opções por página), além dos botões **Gerenciar**, **Auto**, **Resumo** e **Coleção**. Os cliques editam a mesma mensagem pública e são protegidos pelo dono do time. Cartas titulares da mesma categoria podem trocar de slot sem perder um titular.
+
+Para preservar a compatibilidade do jogo, LE/LD/PE/PD são apenas rótulos táticos dos slots. O sistema de elegibilidade continua usando GOL, ZAG, MEI e ATA. Não há química nem capitão inventados.
+
+Leia a implementação em [docs/SQUAD_V58.md](docs/SQUAD_V58.md). **Não precisa de nova migração D1**; é necessário publicar o Worker 5.8.0 na Cloudflare para que o campo funcione no Discord.
 ## 📦 V5 — Loja de pacotes por raridade
 
 A biblioteca original inclui **75 imagens** (53 completas jogáveis e 22 prévias arquivadas e ocultas); apenas as completas alimentam os pacotes **Comum (450), Prata (900), Ouro (2.100), Ícone (4.500), Lendário (8.500), Eclipse (12.500)** e **Misto (900)**, sempre com 3 cartas. Todos os valores em coins.

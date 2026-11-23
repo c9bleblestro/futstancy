@@ -110,15 +110,30 @@ export async function autoLineup(db: Database, userId: string): Promise<boolean>
 
 export async function setSlot(db: Database, userId: string, cardId: string, slot: number): Promise<string> {
   if (!Number.isInteger(slot) || slot < 1 || slot > 11) return 'A vaga deve ser de 1 a 11.';
-  const card = await db.prepare('SELECT c.* FROM cards c WHERE c.owner_id=? AND c.id=? AND NOT EXISTS(SELECT 1 FROM market m WHERE m.card_id=c.id AND m.status=\'active\')').bind(userId, cardId).first<CardRow>();
-  if (!card) return 'Carta não encontrada na sua coleção ou anunciada no mercado.';
+  const card = await db.prepare("SELECT c.* FROM cards c WHERE c.owner_id=? AND c.id=? AND NOT EXISTS(SELECT 1 FROM market m WHERE m.card_id=c.id AND m.status='active')")
+    .bind(userId, cardId).first<CardRow>();
+  if (!card) return 'Carta não encontrada na coleção ou anunciada no mercado.';
   const player = getPlayer(card.player_key);
-  if (player?.pos !== SLOT_POSITION[slot - 1]) return `Essa vaga é para **${SLOT_POSITION[slot - 1]}**; ${player?.name ?? 'o jogador'} é ${player?.pos ?? 'desconhecido'}.`;
-  await db.batch([
-    db.prepare('DELETE FROM lineup WHERE user_id=? AND (slot=? OR card_id=?)').bind(userId, slot, cardId),
-    db.prepare('INSERT INTO lineup(user_id,slot,card_id) VALUES(?,?,?)').bind(userId, slot, cardId),
+  if (player?.pos !== SLOT_POSITION[slot - 1])
+    return 'Essa vaga é para **'+SLOT_POSITION[slot-1]+'**; '+(player?.name??'o jogador')+' é '+(player?.pos??'desconhecido')+'.';
+  const [from,occupied]=await Promise.all([
+    db.prepare('SELECT slot FROM lineup WHERE user_id=? AND card_id=?').bind(userId,cardId).first<{slot:number}>(),
+    db.prepare('SELECT c.id,c.player_key FROM lineup l JOIN cards c ON c.id=l.card_id WHERE l.user_id=? AND l.slot=?')
+      .bind(userId,slot).first<{id:string;player_key:string}>(),
   ]);
-  return `✅ ${player.name} escalado na vaga ${slot}!`;
+  if(from?.slot===slot)return '✅ '+player.name+' já está nessa vaga.';
+  const changes=[
+    db.prepare('DELETE FROM lineup WHERE user_id=? AND (slot=? OR card_id=?)').bind(userId,slot,cardId),
+    db.prepare('INSERT INTO lineup(user_id,slot,card_id) VALUES(?,?,?)').bind(userId,slot,cardId),
+  ];
+  // Quando dois titulares da mesma categoria trocam de slot, ambos permanecem escalados.
+  if(from&&occupied&&occupied.id!==cardId &&
+    getPlayer(occupied.player_key)?.pos===SLOT_POSITION[from.slot-1]){
+    changes.push(db.prepare('INSERT INTO lineup(user_id,slot,card_id) VALUES(?,?,?)')
+      .bind(userId,from.slot,occupied.id));
+  }
+  await db.batch(changes);
+  return '✅ '+player.name+' escalado na vaga '+slot+'!';
 }
 
 export function lineupPlayers(rows: LineupRow[]): Player[] | null {
