@@ -335,7 +335,7 @@ async function dispatchInteraction(i: Interaction, env: Env): Promise<object> {
       }
       return message(`❌ ${r.state}`, true);
     }
-    if (id.startsWith('buy:')) return handleBuy(env, uid, id.slice(4));
+    if (id.startsWith('buy:')) return handleBuy(env, uid, id.slice(4), true);
     return message('Esse botão não pertence ao Futstancy.', true);
   }
 
@@ -495,7 +495,7 @@ async function dispatchInteraction(i: Interaction, env: Env): Promise<object> {
   return message('Comando não encontrado. Use **/fut ajuda**.');
 }
 
-async function handleBuy(env:Env,uid:string,id:string){
+async function handleBuy(env:Env,uid:string,id:string,fromButton=false){
   if(!/^[a-f0-9]{16}$/.test(id))return message('Código de anúncio inválido.');
   if(!await account(env.DB,uid))return needStart();
   const result=await buyCard(env.DB,uid,id);
@@ -506,9 +506,11 @@ async function handleBuy(env:Env,uid:string,id:string){
         '**VALOR PAGO**   🪙 '+result.price?.toLocaleString('pt-BR')+' coins\n\n'+
         '-# A arte e a edição permanecem vinculadas ao exemplar. Confira /fut colecao.',
         GREEN,true,[],result.player?[editionArtUrl(result.player.key,result.edition??'legado')]:[])
-    : card('❌ Transferência não concluída',
+    : fromButton
+      ? message('❌ Compra não realizada. Confira seu saldo e a disponibilidade do anúncio.',true)
+      : card('❌ Transferência não concluída',
         'Verifique se o anúncio está ativo, se você tem coins suficientes e se a carta não é sua.',
-        ERROR,true,[],[]);
+        ERROR,false,[],[]);
 }
 
 
