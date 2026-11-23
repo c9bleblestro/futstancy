@@ -31,15 +31,21 @@ export async function start(db: Database, userId: string): Promise<boolean> {
 export async function ownedCards(db: Database, userId: string, limit = 200): Promise<CardRow[]> {
   return (await db.prepare('SELECT * FROM cards WHERE owner_id=? ORDER BY acquired_ms DESC, id DESC LIMIT ?').bind(userId, limit).all<CardRow>()).results;
 }
-export async function collectionPage(db: Database, userId: string, page: number, tier = 'todas'): Promise<{ cards: CardRow[]; total: number; pages: number }> {
+export const ALBUM_PAGE_SIZE = 8;
+export async function collectionPage(db: Database, userId: string, page: number, tier = 'todas'): Promise<{ cards: CardRow[]; total: number; pages: number; discovered: number }> {
   const where = tier === 'todas' ? 'owner_id=?' : 'owner_id=? AND tier=?';
   const filter = tier === 'todas' ? [userId] : [userId, tier];
-  const totalRow = await db.prepare('SELECT COUNT(*) AS n FROM cards WHERE ' + where).bind(...filter).first<{ n: number }>();
-  const total = totalRow?.n ?? 0;
-  const pages = Math.max(1, Math.ceil(total / 6));
-  const safe = Math.min(Math.max(0, page), pages - 1);
-  const cards = (await db.prepare('SELECT * FROM cards WHERE ' + where + ' ORDER BY acquired_ms DESC, id DESC LIMIT 6 OFFSET ?').bind(...filter, safe * 6).all<CardRow>()).results;
-  return { cards, total, pages };
+  const totals = await db.prepare(
+    'SELECT COUNT(*) AS n, COUNT(DISTINCT CASE WHEN tier<>\'legado\' THEN player_key || \':\' || edition END) AS discovered FROM cards WHERE ' + where
+  ).bind(...filter).first<{ n: number; discovered: number }>();
+  const total = totals?.n ?? 0;
+  const discovered = totals?.discovered ?? 0;
+  const pages = Math.max(1, Math.ceil(total / ALBUM_PAGE_SIZE));
+  const safe = Math.min(Math.max(0, Math.trunc(page)||0), pages - 1);
+  const cards = (await db.prepare(
+    'SELECT * FROM cards WHERE ' + where + ' ORDER BY acquired_ms DESC, id DESC LIMIT ? OFFSET ?'
+  ).bind(...filter, ALBUM_PAGE_SIZE, safe * ALBUM_PAGE_SIZE).all<CardRow>()).results;
+  return { cards, total, pages, discovered };
 }
 
 export async function claim(db: Database, userId: string, player: Player, edition = 'legado'): Promise<{ ok: boolean; left: number; cardId?: string }> {
