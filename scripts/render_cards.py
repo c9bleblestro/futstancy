@@ -194,6 +194,11 @@ def render_banners():
 if __name__=='__main__':
  if not PLAYERS:raise SystemExit('Catálogo não reconhecido')
  for player in PLAYERS:
+  # Jogadores novos podem ter arte em assets/editions sem retrato JPG separado.
+  # Preserve as artes existentes sem abortar a automação por retrato pendente.
+  if not (ROOT/'assets/portraits'/f'{player[0]}.jpg').exists():
+   print('[PHOTO PENDING] Retrato não disponível: '+player[0],flush=True)
+   continue
   # Artes aprovadas pelo usuario sao finais: nao re-renderizar em CI.
   if player[0] in ('bento','bremer','endrick') and (OUT/(player[0]+'.jpg')).exists():
    print('[APPROVED] Mantida carta original de '+player[0],flush=True)
