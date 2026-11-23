@@ -14,7 +14,8 @@ function slash(name:string,sub='ajuda'):Interaction{
 
 test('slash é /fut, prefixo S é apenas para mensagens normais',()=>{
   assert.equal(COMMAND_ROOT,'fut');
-  assert.equal(COMMANDS.length,1);
+  assert.equal(COMMANDS.length,3);
+  assert.deepEqual(COMMANDS.slice(1).map(c=>c.name),['sincronizar','parar_sincronizacao']);
   assert.equal(COMMANDS[0].name,'fut');
   assert.match(COMMAND_VERSION,/5\.9/);
   const names=COMMANDS[0].options.map(c=>c.name);
