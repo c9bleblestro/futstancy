@@ -30,6 +30,20 @@ export function rows(buttons:Btn[]):object[] {
   return result;
 }
 
+export interface SelectOption {label:string;value:string;description?:string;default?:boolean}
+export function stringSelect(id:string,placeholder:string,options:SelectOption[]):object {
+  if(!options.length||options.length>25)throw new Error('Discord select requires 1–25 options');
+  return {type:1,components:[{
+    type:3,custom_id:id.slice(0,100),placeholder:placeholder.slice(0,150),
+    min_values:1,max_values:1,
+    options:options.map(o=>({
+      label:o.label.slice(0,100),value:o.value.slice(0,100),
+      ...(o.description?{description:o.description.slice(0,100)}:{}),
+      ...(o.default?{default:true}:{}),
+    })),
+  }]};
+}
+
 const textDisplay=(content:string)=>({type:10,content});
 
 /** Compatibility fallback for older card descriptions. V5 gameplay passes exact card URLs. */
@@ -94,7 +108,7 @@ export function visualTheme(title:string|undefined,content=''):Theme {
     return {label:'NOVA CARTA',color:GOLD};
   if(/sucesso|concluíd|contratad|criado|nasceu|recompensa|🎉|✅/.test(t))
     return {label:'CONQUISTA',color:GREEN};
-  if(/coleção|colecao/.test(t))return {label:'SEU INVENTÁRIO',color:PURPLE};
+  if(/álbum|album|coleção|colecao/.test(t))return {label:'CLUBE DE CARTAS',color:0x2dd4bf};
   if(/artes|galeria/.test(t))return {label:'BIBLIOTECA DE ARTE',color:0xa78bfa};
   if(/mercado|anunciad|transferência/.test(t))return {label:'CENTRAL DE TRANSFERÊNCIAS',color:0x38bdf8};
   if(/time|equipe|escalação/.test(t))return {label:'VESTIÁRIO',color:0x38bdf8};
@@ -135,11 +149,12 @@ export function buildComponents(
   const header=title
     ? '-# ✦  FUTSTANCY   /   '+theme.label+'\n## '+title
     : '-# ✦  FUTSTANCY   /   '+theme.label;
-  const children:Node[]=[
-    textDisplay(header),
-    textDisplay(description.trim().slice(0,3600)||'Nenhuma informação disponível.'),
-    ...media,
-  ];
+  // Um álbum deve mostrar a grade PRIMEIRO, com resumo breve e controles abaixo.
+  // Outros comandos mantêm o layout tradicional do Futstancy.
+  const album=Boolean(title&&/álbum|album/.test(title.toLocaleLowerCase('pt-BR')));
+  const children:Node[]=album
+    ? [textDisplay(header),...media,textDisplay(description.trim().slice(0,3600)||'Nenhuma carta disponível.')]
+    : [textDisplay(header),textDisplay(description.trim().slice(0,3600)||'Nenhuma informação disponível.'),...media];
   if(buttons.length){
     if(children.length+buttons.length<10)children.push({type:14,divider:true,spacing:1});
     children.push(...buttons as Node[]);
