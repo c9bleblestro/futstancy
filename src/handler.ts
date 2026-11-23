@@ -1,4 +1,5 @@
 import { getPlayer, PLAYERS } from './catalog.ts';
+import {squadPanel,squadCandidates,squadDetail} from './squad-ui.ts';
 import { COMMAND_ROOT } from './commands.ts';
 import { SLOT_POSITION, timeRemaining, teamStrength } from './game.ts';
 import { account, start, claim, daily, collectionPage, ALBUM_PAGE_SIZE, lineup, lineupPlayers, autoLineup, setSlot, createChallenge, resolveChallenge, openPack, marketPage, listCard, buyCard, cancelListing, leaderboard } from './storage.ts';
@@ -107,6 +108,7 @@ async function showCollection(env:Env,owner:string,page:number,tier='todas'){
     button('Próxima página ▶','col:'+owner+':'+selected+':'+(safe+1),1,safe>=data.pages-1),
     button('🛒 Mercado','mktowner:'+owner+':todas',2),
     button('🎨 Galeria','art:'+owner+':cards:todas:0',2),
+    button('⚽ Time','team:view:'+owner,2),
   ]);
   return card('📚 Álbum Futstancy',summary,PURPLE,true,[...pick,filter,...actions],
     data.cards.map(c=>editionArtUrl(c.player_key,c.edition)).filter(Boolean));
@@ -146,23 +148,7 @@ async function showCollectionCard(env:Env,owner:string,cardId:string,tier='todas
 }
 
 async function showTeam(env:Env,owner:string){
-  const all=await lineup(env.DB,owner);
-  const players=lineupPlayers(all);
-  const format=(start:number,end:number)=>{
-    return Array.from({length:end-start},(_,i)=>{
-      const slot=start+i,c=all.find(x=>x.slot===slot+1),p=c?getPlayer(c.player_key):null;
-      return String(slot+1).padStart(2,'0')+'.  '+(p?'**'+p.name+'**  ·  '+p.ovr+' OVR':'*Vaga vazia*');
-    }).join('\n');
-  };
-  const description='**FORMAÇÃO 4-3-3**   •   **'+(players?teamStrength(players)+' OVR':'Escalação incompleta')+'**\n\n'+
-    '**🧤 GOLEIRO**\n'+format(0,1)+'\n\n'+
-    '**🛡️ DEFESA**\n'+format(1,5)+'\n\n'+
-    '**🎯 MEIO-CAMPO**\n'+format(5,8)+'\n\n'+
-    '**⚡ ATAQUE**\n'+format(8,11)+'\n\n'+
-    '-# Altere titulares em /fut escalar ou monte seu melhor elenco abaixo.';
-  return card('⚽ Seu time titular',description,PURPLE,true,
-    rows([button('⚙️ Melhor escalação','auto:'+owner,1)]),
-    [...all].sort((a,b)=>a.slot-b.slot).map(c=>editionArtUrl(c.player_key,c.edition)).filter(Boolean));
+  return squadPanel(env,owner);
 }
 
 async function showMarket(env:Env,tier='todas'){
@@ -241,6 +227,38 @@ async function dispatchInteraction(i: Interaction, env: Env): Promise<object> {
 
   if (i.type === 3) {
     const id = i.data?.custom_id ?? '';
+    if(id.startsWith('team:')){
+      const [,action,owner,slotRaw,pageRaw]=id.split(':');
+      if(owner!==uid)return message('Esse time pertence a outro jogador.',true);
+      if(!await account(env.DB,uid))return message('Crie seu clube com /fut iniciar.',true);
+      if(action==='view')return squadPanel(env,owner);
+      if(action==='manage')return squadPanel(env,owner,'manage');
+      if(action==='summary')return squadPanel(env,owner,'summary');
+      if(action==='collection')return showCollection(env,owner,0);
+      if(action==='auto'){
+        const ok=await autoLineup(env.DB,owner);
+        return ok?squadPanel(env,owner,'pitch','✅ Melhor escalação aplicada'):
+          message('Você precisa de 1 GOL, 4 ZAG, 3 MEI e 3 ATA para completar o time.',true);
+      }
+      if(action==='slotpick'||action==='playerpick'){
+        const slot=Number(i.data?.values?.[0]??'');
+        if(!Number.isInteger(slot)||slot<1||slot>11)return message('Vaga inválida.',true);
+        return action==='slotpick'?squadCandidates(env,owner,slot):squadDetail(env,owner,slot);
+      }
+      if(action==='candidates'){
+        const slot=Number(slotRaw),page=Number(pageRaw);
+        return squadCandidates(env,owner,slot,Number.isFinite(page)?page:0);
+      }
+      if(action==='apply'){
+        const slot=Number(slotRaw),cardId=i.data?.values?.[0]??'';
+        if(!Number.isInteger(slot)||slot<1||slot>11||!/^[a-f0-9]{16}$/.test(cardId))
+          return message('Carta ou vaga inválida.',true);
+        const result=await setSlot(env.DB,owner,cardId,slot);
+        return result.startsWith('✅')?squadPanel(env,owner,'pitch',result):message(result,true);
+      }
+      return message('Ação de escalação inválida.',true);
+    }
+
     if(id.startsWith('colview:')){
       const [,owner,tier,pageRaw]=id.split(':');
       if(uid!==owner)return message('Essa coleção pertence a outro jogador.',true);

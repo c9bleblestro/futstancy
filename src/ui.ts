@@ -2,7 +2,7 @@ import { PLAYERS, type Player } from './catalog.ts';
 import { playerArtUrl, galleryUrls } from './editions.ts';
 
 /**
- * FUTSTANCY V5.7 — cinematic system-art layout for all Discord responses.
+ * FUTSTANCY V5.8 — dynamic tactical 4-3-3 squad layout for all Discord responses.
  * Only Components V2 are sent: branded Containers (17), Text Displays (10),
  * Media Galleries (12), Separators (14) and working Action Rows (1).
  * All actual player/coin values are supplied by the handler from D1, never art.
@@ -94,7 +94,7 @@ const BANNER_CDN='https://raw.githubusercontent.com/c9bleblestro/futstancy/main/
 export function systemBanner(title:string|undefined):string|null {
   const t=(title??'').toLocaleLowerCase('pt-BR');
   let key:string|null=null;
-  if(/álbum|coleção|galeria de artes|ficha da carta|nova contratação|pacote .* aberto/.test(t))return null;
+  if(/álbum|coleção|galeria de artes|ficha da carta|nova contratação|pacote .* aberto|campo tático|gerenciar escalação|resumo do elenco|vaga \d|titular ·/.test(t))return null;
   if(/mercado|anúncio|anunciad|transferência/.test(t))key='mercado';
   else if(/central de pacotes|pacotes/.test(t))key='pacotes';
   else if(/seu time|equipe|escalação/.test(t))key='time';
@@ -128,7 +128,7 @@ export function visualTheme(title:string|undefined,content=''):Theme {
   if(/álbum|album|coleção|colecao/.test(t))return {label:'CLUBE DE CARTAS',color:0x2dd4bf};
   if(/artes|galeria/.test(t))return {label:'BIBLIOTECA DE ARTE',color:0xa78bfa};
   if(/mercado|anunciad|transferência/.test(t))return {label:'CENTRAL DE TRANSFERÊNCIAS',color:0x38bdf8};
-  if(/time|equipe|escalação/.test(t))return {label:'VESTIÁRIO',color:0x38bdf8};
+  if(/time|equipe|escalação|campo tático|resumo do elenco|titular|vaga \d/.test(t))return {label:'ELENCO TÁTICO',color:0x36d5c1};
   if(/pacote|loja/.test(t))return {label:'PACOTES E RECOMPENSAS',color:GOLD};
   if(/ranking|classificação/.test(t))return {label:'TEMPORADA',color:GOLD};
   if(/desafio|jogo|partida|convite|placar|resultado|fim de jogo/.test(t))return {label:'ARENA FUTSTANCY',color:0xfb7185};
@@ -170,7 +170,7 @@ export function buildComponents(
     : '-# ✦  FUTSTANCY   /   '+theme.label;
   // Um álbum deve mostrar a grade PRIMEIRO, com resumo breve e controles abaixo.
   // Outros comandos mantêm o layout tradicional do Futstancy.
-  const album=Boolean(title&&/álbum|album/.test(title.toLocaleLowerCase('pt-BR')));
+  const album=Boolean(title&&/álbum|album|campo tático|gerenciar escalação|resumo do elenco/.test(title.toLocaleLowerCase('pt-BR')));
   const children:Node[]=album
     ? [textDisplay(header),...media,textDisplay(description.trim().slice(0,3600)||'Nenhuma carta disponível.')]
     : [textDisplay(header),...banners,textDisplay(description.trim().slice(0,3600)||'Nenhuma informação disponível.'),...media];

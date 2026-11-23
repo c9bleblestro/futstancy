@@ -4,7 +4,7 @@ const int = (name: string, description: string, min = 1, max = 200000) => ({ typ
 const user = (name: string, description: string) => ({ type: 6, name, description, required: true });
 
 export const COMMAND_ROOT = 'fut';
-export const COMMAND_VERSION = 'v5.5.0-fut-slash-public-updates';
+export const COMMAND_VERSION = 'v5.8.0-squad-view';
 const tiers=[{name:'Todas',value:'todas'},{name:'Comum',value:'comum'},{name:'Prata',value:'prata'},{name:'Ouro',value:'ouro'},{name:'Ícone',value:'icone'},{name:'Lendário',value:'lendario'},{name:'Eclipse',value:'eclipse'},{name:'Clássica/Legado',value:'legado'}];
 const packs=[{name:'Misto — 900 coins',value:'misto'},{name:'Comum — 450',value:'comum'},{name:'Prata — 900',value:'prata'},{name:'Ouro — 2100',value:'ouro'},{name:'Ícone — 4500',value:'icone'},{name:'Lendário — 8500',value:'lendario'},{name:'Eclipse — 12500',value:'eclipse'}];
 const select=(name:string,description:string,choices:{name:string;value:string}[])=>({type:3,name,description,required:false,choices});
@@ -23,7 +23,7 @@ export const COMMANDS = [{
     sub('pacote', 'Loja de pacotes por raridade.', [select('tipo','Vazio: abrir loja; com tipo: comprar e abrir',packs)]),
     sub('colecao', 'Veja suas cartas com filtros.', [select('raridade','Filtrar raridade',tiers)]),
     sub('artes', 'Veja todos os lotes e conceitos visuais do Futstancy.'),
-    sub('time', 'Veja sua escalação 4-3-3 e força do elenco.'),
+    sub('time', 'Veja seu time em campo tático 4-3-3 e gerencie os titulares.'),
     sub('auto', 'Monte o melhor time automaticamente.'),
     sub('escalar', 'Escale uma carta em uma das 11 vagas.', [str('id', 'ID da carta em /fut colecao'), int('vaga', '1=GOL; 2–5=ZAG; 6–8=MEI; 9–11=ATA', 1, 11)]),
     sub('desafiar', 'Convide outro jogador para uma partida PvP.', [user('membro', 'Adversário que receberá o convite')]),
