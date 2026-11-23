@@ -166,7 +166,7 @@ export function buildComponents(
   const banner=systemBanner(title);
   const banners=banner?galleries([banner]):[];
   const header=title
-    ? '-# ✦  FUTSTANCY   /   '+theme.label+(banner?'':'\n## '+title)
+    ? '-# ✦  FUTSTANCY   /   '+theme.label+(banner?'  •  '+title:'\n## '+title)
     : '-# ✦  FUTSTANCY   /   '+theme.label;
   // Um álbum deve mostrar a grade PRIMEIRO, com resumo breve e controles abaixo.
   // Outros comandos mantêm o layout tradicional do Futstancy.
