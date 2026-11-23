@@ -26,6 +26,7 @@ export interface Interaction {
   type: number;
   id: string;
   application_id?: string;
+  token?: string;
   guild_id?: string;
   member?: { user?: { id: string; username: string } };
   user?: { id: string; username: string };
