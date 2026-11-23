@@ -6,7 +6,7 @@ type Callback={type?:number;data?:{components?:object[];flags?:number;allowed_me
 type FetchFn=(url:string,init?:RequestInit)=>Promise<Response>;
 
 /** ACK em menos de três segundos para botões de navegação, com edição posterior. */
-const navigation=/^(?:art|col|colview|colfilter|colslot|mkt|mktowner|pack|auto|buy|match|team):/;
+const navigation=/^(?:art|col|colview|colfilter|colslot|mkt|mktowner|pack|auto|buy|match|team|profile):/;
 
 export function shouldDeferInteraction(i:Interaction,env:Env):boolean {
   const app=i.application_id??env.DISCORD_APPLICATION_ID;
