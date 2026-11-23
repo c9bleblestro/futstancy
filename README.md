@@ -11,6 +11,14 @@ Agora há **dois formatos de comando**. Para usar mensagens normais no canal, es
 **Importante:** o prefixo só recebe mensagens quando **o Gateway Node.js está hospedado e conectado ao Discord**, e o Worker Cloudflare está atualizado. É obrigatório habilitar **Message Content Intent** no Discord Developer Portal → Bot. Um push ao GitHub não inicia esse receptor automaticamente.
 
 Consulte **[docs/PREFIXO_S.md](docs/PREFIXO_S.md)** para ativação, secrets e hospedagem.
+## 📚 V5.4 — Álbum de jogadores
+
+O comando **`/s colecao`** (e `Scolecao` quando o Gateway estiver ativado) agora exibe um **álbum interativo com 8 cartas por página**. O visual tem uma grade de imagens, progresso real de atletas descobertos, seletor de cartas e filtro de raridade. A lista extensa de IDs foi removida da tela principal.
+
+Selecionar uma carta abre sua ficha individual com arte, edição, ID e status; dela é possível escalar o jogador ou anunciar uma carta disponível. O mercado mantém o preço fixo e a taxa de 5%. A interface foi inspirada pelo formato de álbum enviado como referência, mas possui identidade própria FUTSTANCY.
+
+Detalhes e restrições em [docs/ALBUM_V5_4.md](docs/ALBUM_V5_4.md).
+
 ## 📦 V5 — Loja de pacotes por raridade
 
 A biblioteca inclui **75 artes** (53 completas jogáveis e 22 prévias); as artes completas alimentam os pacotes **Comum (450), Prata (900), Ouro (2.100), Ícone (4.500), Lendário (8.500), Eclipse (12.500)** e **Misto (900)**, sempre com 3 cartas. Todos os valores em coins.
