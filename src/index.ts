@@ -61,7 +61,7 @@ export default {
     const url = new URL(request.url);
     if(url.pathname==='/prefix/execute')return handleTextPrefixRequest(request,env);
     if (request.method === 'GET' && url.pathname === '/art/status') {
-      return jsonResponse({ status: 'ready', version: '5.3.0', routes: ['player.png', 'collection.png', 'market.png', 'team.png', 'pack.png', 'score.png', 'banner.png'] });
+      return jsonResponse({ status: 'ready', version: '5.4.0', routes: ['player.png', 'collection.png', 'market.png', 'team.png', 'pack.png', 'score.png', 'banner.png'] });
     }
     if (request.method === 'GET' && url.pathname.startsWith('/art/')) {
       const artwork = await renderArt(request);
@@ -72,7 +72,7 @@ export default {
       return new Response(landing, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60', 'X-Content-Type-Options': 'nosniff' } });
     }
     if (request.method === 'GET' && url.pathname === '/health') {
-      return jsonResponse({ name: 'Futstancy', worker: 'online', version: '5.3.0', interactionEndpoint: '/interactions' });
+      return jsonResponse({ name: 'Futstancy', worker: 'online', version: '5.4.0', interactionEndpoint: '/interactions' });
     }
     if (request.method !== 'POST' || url.pathname !== '/interactions') {
       return new Response('Not Found', { status: 404 });
