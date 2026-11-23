@@ -1,6 +1,6 @@
 {
   "name": "futstancy",
-  "version": "5.6.0",
+  "version": "5.7.0",
   "private": true,
   "type": "module",
   "description": "Bot Discord: jogo de futebol em Cloudflare Worker + D1 e Gateway com prefixo S",

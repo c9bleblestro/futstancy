@@ -23,12 +23,14 @@ test('coleção envia fotos em cartas JPG estáticas; elimina imagens em branco 
 
 test('mercado, time e pacote exibem retratos dos jogadores reais cadastrados',()=>{
   const market=gallery('🛒 Mercado de transferências','**1.** **Erling Haaland** · ATA · **93 OVR**\n💰 **9.000 coins** · Código: \`123\`');
-  assert.equal(market.length,1);
-  assert.match(market[0],/\/assets\/editions\/haaland\/icone\.jpg/);
+  assert.equal(market.length,2);
+  assert.match(market[0],/\/assets\/ui\/v57\/mercado\.jpg/);
+  assert.match(market[1],/\/assets\/editions\/haaland\/icone\.jpg/);
   const team=gallery('⚽ Sua equipe — 4-3-3','**1. GOL** · Alisson Becker (89 OVR)\n**2. ZAG** · Dani Carvajal (81 OVR)\n**Força total:** 84 OVR');
-  assert.equal(team.length,2);
-  assert.ok(team[0].includes('/assets/editions/alisson/icone.jpg'));
-  assert.ok(team[1].includes('/assets/editions/carvajal/comum.jpg'));
+  assert.equal(team.length,3);
+  assert.ok(team[0].includes('/assets/ui/v57/time.jpg'));
+  assert.ok(team[1].includes('/assets/editions/alisson/icone.jpg'));
+  assert.ok(team[2].includes('/assets/editions/carvajal/comum.jpg'));
   const pack=gallery('📦 Pacote aberto!','**Bento** · GOL · **76 OVR**\n**Bremer** · ZAG · **80 OVR**\n**Endrick** · ATA · **77 OVR**');
   assert.equal(pack.length,1);
   assert.ok(pack[0].includes('/assets/packs/bento_bremer_endrick.jpg'));
@@ -42,8 +44,8 @@ test('até onze jogadores no time geram galerias válidas com no máximo 10 iten
   const comp=buildComponents('⚽ Sua equipe — 4-3-3',lines) as {type:number;items?:{media:{url:string}}[]}[];
   const cards=children(comp).filter(c=>c.type===12);
   const all=cards.flatMap(c=>c.items??[]);
-  assert.ok(cards.length>=1 && cards.length<=2);
-  assert.ok(all.length<=11);
+  assert.ok(cards.length>=2 && cards.length<=3);
+  assert.ok(all.length<=12);
   assert.ok(all.length>=1);
   assert.ok(all.every(c=>!c.media.url.includes('/assets/cards/')));
 });
@@ -54,7 +56,9 @@ test('menus, falhas e recompensas continuam em Components V2 sem embeds',()=>{
     assert.equal(data.embeds,undefined);
     assert.equal(data.content,undefined);
     assert.equal(data.components[0].type,17);
-    assert.equal(children(data.components).some(c=>c.type===12),false); // Status não usam banners genéricos.
+    // Resultado de partida exibe arte temática, mas nenhum dado fictício; erros continuam enxutos.
+    if(response.type===7)assert.equal(children(data.components).some(c=>c.type===12),true);
+    else assert.equal(children(data.components).some(c=>c.type===12),false);
   }
   assert.equal((card('Teste','OK').data.flags&V2),V2);
   assert.equal(rows([button('Comprar','buy:123')]).length,1);
@@ -64,7 +68,7 @@ test('Worker mantém rotas legadas e não expõe keys desconhecidas',async()=>{
   const ctx={waitUntil() {}};
   const status=await worker.fetch(new Request('https://example.org/art/status'),{} as never,ctx);
   assert.equal(status.status,200);
-  assert.equal((await status.json() as {version:string}).version,'5.6.0');
+  assert.equal((await status.json() as {version:string}).version,'5.7.0');
   const no=await worker.fetch(new Request('https://example.org/art/player.png?k=bad'),{} as never,ctx);
   assert.equal(no.status,404);
 });

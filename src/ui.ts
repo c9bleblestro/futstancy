@@ -2,7 +2,7 @@ import { PLAYERS, type Player } from './catalog.ts';
 import { playerArtUrl, galleryUrls } from './editions.ts';
 
 /**
- * FUTSTANCY V5.2 — visual system for all Discord responses.
+ * FUTSTANCY V5.7 — cinematic system-art layout for all Discord responses.
  * Only Components V2 are sent: branded Containers (17), Text Displays (10),
  * Media Galleries (12), Separators (14) and working Action Rows (1).
  * All actual player/coin values are supplied by the handler from D1, never art.
@@ -89,6 +89,23 @@ function staticImages(title:string,description:string):string[]{
   return [];
 }
 
+/** Capas editoriais dos sistemas. As cartas de jogadores permanecem intactas. */
+const BANNER_CDN='https://raw.githubusercontent.com/c9bleblestro/futstancy/main/assets/ui/v57/';
+export function systemBanner(title:string|undefined):string|null {
+  const t=(title??'').toLocaleLowerCase('pt-BR');
+  let key:string|null=null;
+  if(/álbum|coleção|galeria de artes|ficha da carta|nova contratação|pacote .* aberto/.test(t))return null;
+  if(/mercado|anúncio|anunciad|transferência/.test(t))key='mercado';
+  else if(/central de pacotes|pacotes/.test(t))key='pacotes';
+  else if(/seu time|equipe|escalação/.test(t))key='time';
+  else if(/desafio|partida|resultado do jogo|fim de jogo/.test(t))key='partida';
+  else if(/ranking|classificação/.test(t))key='ranking';
+  else if(/perfil do treinador/.test(t))key='perfil';
+  else if(/recompensa|daily/.test(t))key='daily';
+  else if(/bem-vindo|clube já existente|guia do treinador|primeiro, crie/.test(t))key='inicio';
+  return key?BANNER_CDN+key+'.jpg?v=futstancy-v5-7':null;
+}
+
 type Theme={label:string;color:number};
 export function visualTheme(title:string|undefined,content=''):Theme {
   const t=(title??'').toLocaleLowerCase('pt-BR');
@@ -146,15 +163,17 @@ export function buildComponents(
   const color=accent===ERROR||accent===GREEN?accent:theme.color;
   const source=imageUrls??staticImages(title??'',description);
   const media=galleries(source);
+  const banner=systemBanner(title);
+  const banners=banner?galleries([banner]):[];
   const header=title
-    ? '-# ✦  FUTSTANCY   /   '+theme.label+'\n## '+title
+    ? '-# ✦  FUTSTANCY   /   '+theme.label+(banner?'  •  '+title:'\n## '+title)
     : '-# ✦  FUTSTANCY   /   '+theme.label;
   // Um álbum deve mostrar a grade PRIMEIRO, com resumo breve e controles abaixo.
   // Outros comandos mantêm o layout tradicional do Futstancy.
   const album=Boolean(title&&/álbum|album/.test(title.toLocaleLowerCase('pt-BR')));
   const children:Node[]=album
     ? [textDisplay(header),...media,textDisplay(description.trim().slice(0,3600)||'Nenhuma carta disponível.')]
-    : [textDisplay(header),textDisplay(description.trim().slice(0,3600)||'Nenhuma informação disponível.'),...media];
+    : [textDisplay(header),...banners,textDisplay(description.trim().slice(0,3600)||'Nenhuma informação disponível.'),...media];
   if(buttons.length){
     if(children.length+buttons.length<10)children.push({type:14,divider:true,spacing:1});
     children.push(...buttons as Node[]);
