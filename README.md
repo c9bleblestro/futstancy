@@ -1,5 +1,16 @@
 # ⚽ FUTSTANCY — futebol no Discord
 
+## Comandos administrativos de sincronização
+
+Do arquivo Python recebido, foram adaptados os slash commands **/sincronizar** e **/parar_sincronizacao**, sem alterar o jogo, os outros comandos ou o prefixo de texto S.
+
+- **/sincronizar**: somente administradores; executa uma atualização única dos slash commands pela API do Discord, salva a versão atual no banco D1 e impede chamadas consecutivas por 30 segundos. Não envia mensagens repetidas ao canal.
+- **/parar_sincronizacao**: somente administradores; informa o estado da sincronização. Não há tarefa contínua para cancelar.
+- As respostas são privadas ao administrador. Os comandos antigos **/fut** e o prefixo **S** foram mantidos.
+- A rotina de mensagens infinitas do arquivo enviado simulava logs e publicava spam a cada 0,4 segundo. Essa parte **não foi incorporada**.
+- A aplicação continua sendo **Cloudflare Workers + D1/TypeScript**: não é necessário executar o Python nem instalar outro processo. Não houve migração de dados.
+- GitHub `main` não é deploy. Após publicar o Worker, confira `/health` na versão **5.9.2** e depois execute os comandos administrativos junto ao Discord.
+
 ## V5.9 — Perfil dinâmico e cartas originais em miniatura
 
 O **/fut perfil** usa dashboard gerado com **nome/avatar reais do Discord** e estatísticas atuais do **D1** (coins, resultados, gols e titulares). Os botões **Atualizar, Time, Coleção e Mercado** são componentes nativos do Discord fora da imagem; cada clique edita a mensagem original. Os dados do Discord são consultados via REST com fallback nos dados da interação.
