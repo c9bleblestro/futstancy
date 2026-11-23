@@ -162,19 +162,19 @@ export function buildComponents(
   if(children.length>10)throw new Error('Discord Container exceeded 10 children');
   return [
     {type:17,accent_color:color,components:children},
-    textDisplay('-# FUTSTANCY   •   Clube, cartas e futebol   •   /s ajuda'),
+    textDisplay('-# FUTSTANCY   •   Clube, cartas e futebol   •   /fut ajuda'),
   ];
 }
 
-export function message(content:string,ephemeral=true,buttons:object[]=[]){
+export function message(content:string,ephemeral=false,buttons:object[]=[]){
   return {type:4,data:{
     flags:V2|(ephemeral?64:0),components:buildComponents(undefined,content,buttons),
     allowed_mentions:{parse:[]},
   }};
 }
-export function card(title:string,description:string,_color=PURPLE,ephemeral=true,buttons:object[]=[],imageUrls?:string[]){
+export function card(title:string,description:string,_color=PURPLE,_ephemeral=false,buttons:object[]=[],imageUrls?:string[]){
   return {type:4,data:{
-    flags:V2|(ephemeral?64:0),components:buildComponents(title,description,buttons,imageUrls,_color),
+    flags:V2,components:buildComponents(title,description,buttons,imageUrls,_color),
     allowed_mentions:{parse:[]},
   }};
 }
