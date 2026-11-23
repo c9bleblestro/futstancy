@@ -1,5 +1,9 @@
 # ⚽ FUTSTANCY — futebol no Discord
 
+## V5.7 — Novas artes dos comandos
+
+Oito banners com temas diferentes de futebol substituem as capas repetitivas: **perfil, mercado, pacotes, time, partidas, ranking, recompensas e clube**. As cartas dos jogadores não mudaram. As imagens são geradas em `assets/ui/v57/` pelo script `scripts/render_ui_banners.py` e publicadas na `main` pela Action `ui-banners.yml`. Veja [docs/UI_V5_7.md](docs/UI_V5_7.md).
+
 **Bot independente do Savage:** comandos slash funcionam via Cloudflare Workers + D1. Para reconhecer mensagens comuns com prefixo S, o projeto inclui um serviço Discord Gateway persistente, que precisa ficar online numa hospedagem Node.js. O Worker e o Gateway compartilham a lógica do jogo.
 
 > Estado do projeto: **MVP funcional de código**, pronto para configurar e publicar. Ainda não está conectado a um aplicativo Discord nem implantado na Cloudflare. Não inclua tokens em arquivos versionados. O Gateway precisa de processo persistente; o Worker Cloudflare é serverless.
