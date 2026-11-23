@@ -75,8 +75,8 @@ export async function squadPanel(env:Env,owner:string,mode:'pitch'|'manage'|'sum
   const controls=manager
     ? [select,...rows([button('← Voltar ao campo','team:view:'+owner,2),
         button('🔁 Auto','team:auto:'+owner,1),
-        button('📚 Coleção','team:collection:'+owner,2)])].filter(Boolean)
-    : [select,viewPlayer,...nav(owner)].filter(Boolean);
+        button('📚 Coleção','team:collection:'+owner,2)])].filter((item):item is object=>Boolean(item))
+    : [select,viewPlayer,...nav(owner)].filter((item):item is object=>Boolean(item));
   return card(manager?'⚙️ Gerenciar escalação':'⚽ Campo tático 4-3-3',
     summaryLine(current,owner,notice),PURPLE,false,
     controls,[squadImageUrl(owner,current)]);
