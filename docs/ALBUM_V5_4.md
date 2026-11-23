@@ -3,7 +3,7 @@
 ## Referência estética
 A coleção foi reorganizada a partir do conceito de álbum/pokedex enviado pelo usuário, mas com identidade própria de futebol. Não copia as cartas, desenhos nem a marca do outro bot.
 
-## O que mudou no /s colecao e Scolecao
+## O que mudou no /fut colecao e Scolecao
 - Agora mostra 8 artes individuais reais por página na grade Media Gallery do Discord, no lugar de 6 cartas seguidas de um bloco enorme de nomes e IDs.
 - O cabeçalho usa o estilo FUTSTANCY e um painel azul-turquesa. A grade vem antes do texto.
 - O resumo mostra quantidade de exemplares, atletas distintos descobertos e progresso real em relação ao catálogo de 60 jogadores; legado conta para o progresso.
