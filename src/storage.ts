@@ -1,6 +1,7 @@
 import { STARTER_KEYS, getPlayer, type Player } from './catalog.ts';
-import { chooseTeam, SLOT_POSITION, CLAIM_COOLDOWN_MS, DAILY_COOLDOWN_MS, PACK_COST, drawPack, simulateMatch } from './game.ts';
+import { chooseTeam, SLOT_POSITION, CLAIM_COOLDOWN_MS, DAILY_COOLDOWN_MS, simulateMatch } from './game.ts';
 import type { Account, CardRow, Database, LineupRow, ListingRow, MatchRow } from './types.ts';
+import { PACKS, drawEditionPack, editionTier, type PackType } from './packs.ts';
 
 const uid = () => crypto.randomUUID().replace(/-/g, '').slice(0, 16);
 const change = (r: { meta: { changes?: number } }) => (r.meta?.changes ?? 0) > 0;
@@ -30,16 +31,24 @@ export async function start(db: Database, userId: string): Promise<boolean> {
 export async function ownedCards(db: Database, userId: string, limit = 200): Promise<CardRow[]> {
   return (await db.prepare('SELECT * FROM cards WHERE owner_id=? ORDER BY acquired_ms DESC, id DESC LIMIT ?').bind(userId, limit).all<CardRow>()).results;
 }
-export async function collectionPage(db: Database, userId: string, page: number): Promise<{ cards: CardRow[]; total: number; pages: number }> {
-  const totalRow = await db.prepare('SELECT COUNT(*) AS n FROM cards WHERE owner_id=?').bind(userId).first<{ n: number }>();
-  const total = totalRow?.n ?? 0;
-  const pages = Math.max(1, Math.ceil(total / 6));
-  const safe = Math.min(Math.max(0, page), pages - 1);
-  const cards = (await db.prepare('SELECT * FROM cards WHERE owner_id=? ORDER BY acquired_ms DESC, id DESC LIMIT 6 OFFSET ?').bind(userId, safe * 6).all<CardRow>()).results;
-  return { cards, total, pages };
+export const ALBUM_PAGE_SIZE = 8;
+export async function collectionPage(db: Database, userId: string, page: number, tier = 'todas'): Promise<{ cards: CardRow[]; total: number; pages: number; discovered: number }> {
+  const where = tier === 'todas' ? 'owner_id=?' : 'owner_id=? AND tier=?';
+  const filter = tier === 'todas' ? [userId] : [userId, tier];
+  const totals = await db.prepare(
+    'SELECT COUNT(*) AS n, COUNT(DISTINCT player_key) AS discovered FROM cards WHERE ' + where
+  ).bind(...filter).first<{ n: number; discovered: number }>();
+  const total = totals?.n ?? 0;
+  const discovered = totals?.discovered ?? 0;
+  const pages = Math.max(1, Math.ceil(total / ALBUM_PAGE_SIZE));
+  const safe = Math.min(Math.max(0, Math.trunc(page)||0), pages - 1);
+  const cards = (await db.prepare(
+    'SELECT * FROM cards WHERE ' + where + ' ORDER BY acquired_ms DESC, id DESC LIMIT ? OFFSET ?'
+  ).bind(...filter, ALBUM_PAGE_SIZE, safe * ALBUM_PAGE_SIZE).all<CardRow>()).results;
+  return { cards, total, pages, discovered };
 }
 
-export async function claim(db: Database, userId: string, player: Player): Promise<{ ok: boolean; left: number; cardId?: string }> {
+export async function claim(db: Database, userId: string, player: Player, edition = 'legado'): Promise<{ ok: boolean; left: number; cardId?: string }> {
   const now = Date.now();
   const cardId = uid();
   const nonce = uid();
@@ -47,9 +56,9 @@ export async function claim(db: Database, userId: string, player: Player): Promi
     db.prepare(`UPDATE users SET last_claim_ms=?,claim_nonce=? WHERE user_id=?
       AND (last_claim_ms IS NULL OR last_claim_ms <= ?)`)
       .bind(now, nonce, userId, now - CLAIM_COOLDOWN_MS),
-    db.prepare(`INSERT INTO cards(id,owner_id,player_key,acquired_ms)
-      SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM users WHERE user_id=? AND claim_nonce=?)`)
-      .bind(cardId, userId, player.key, now, userId, nonce),
+    db.prepare(`INSERT INTO cards(id,owner_id,player_key,edition,tier,acquired_ms)
+      SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM users WHERE user_id=? AND claim_nonce=?)`)
+      .bind(cardId, userId, player.key, edition, editionTier(edition), now, userId, nonce),
   ]);
   if (change(result[0])) return { ok: true, left: CLAIM_COOLDOWN_MS, cardId };
   const user = await account(db, userId);
@@ -64,19 +73,26 @@ export async function daily(db: Database, userId: string): Promise<{ ok: boolean
   return { ok: false, coins: user?.coins ?? 0, left: Math.max(0, (user?.last_daily_ms ?? now) + DAILY_COOLDOWN_MS - now) };
 }
 
-export async function openPack(db: Database, userId: string): Promise<{ ok: boolean; players: Player[] }> {
-  const players = drawPack();
+export async function openPack(db: Database, userId: string, type: PackType='misto'): Promise<{ ok:boolean; players:Player[]; cards:{id:string;player:Player;edition:string;tier:string}[]; cost:number; type:PackType }> {
+  const definition = PACKS[type];
+  if (!definition) return {ok:false,players:[],cards:[],cost:0,type};
+  const drawn = drawEditionPack(type);
+  const cards = drawn.map(d => ({id:uid(),player:d.player,edition:d.edition,tier:d.tier}));
   const nonce = uid();
   const now = Date.now();
+  // No mesmo batch: debita apenas se houver saldo e só então cria os três exemplares.
+  // Edition e tier ficam persistidos por ID, inclusive após a transferência no mercado.
   const result = await db.batch([
-    db.prepare('UPDATE users SET coins=coins-?,purchase_nonce=? WHERE user_id=? AND coins>=?').bind(PACK_COST, nonce, userId, PACK_COST),
-    ...players.map(player => db.prepare('INSERT INTO cards(id,owner_id,player_key,acquired_ms) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM users WHERE user_id=? AND purchase_nonce=?)').bind(uid(), userId, player.key, now, userId, nonce)),
+    db.prepare('UPDATE users SET coins=coins-?,purchase_nonce=? WHERE user_id=? AND coins>=?').bind(definition.cost, nonce, userId, definition.cost),
+    ...cards.map(c => db.prepare('INSERT INTO cards(id,owner_id,player_key,edition,tier,acquired_ms) SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM users WHERE user_id=? AND purchase_nonce=?)')
+      .bind(c.id,userId,c.player.key,c.edition,c.tier,now,userId,nonce)),
   ]);
-  return { ok: change(result[0]), players: change(result[0]) ? players : [] };
+  const ok=change(result[0]);
+  return {ok,players:ok?cards.map(c=>c.player):[],cards:ok?cards:[],cost:definition.cost,type};
 }
 
 export async function lineup(db: Database, userId: string): Promise<LineupRow[]> {
-  return (await db.prepare('SELECT l.slot,c.id,c.player_key FROM lineup l JOIN cards c ON c.id=l.card_id AND c.owner_id=l.user_id WHERE l.user_id=? ORDER BY l.slot').bind(userId).all<LineupRow>()).results;
+  return (await db.prepare('SELECT l.slot,c.id,c.player_key,c.edition,c.tier FROM lineup l JOIN cards c ON c.id=l.card_id AND c.owner_id=l.user_id WHERE l.user_id=? ORDER BY l.slot').bind(userId).all<LineupRow>()).results;
 }
 
 export async function autoLineup(db: Database, userId: string): Promise<boolean> {
@@ -161,13 +177,14 @@ export async function listCard(db: Database, userId: string, cardId: string, pri
   return change(created) ? { ok: true, id } : { ok: false };
 }
 
-export async function marketPage(db: Database): Promise<ListingRow[]> {
-  return (await db.prepare(`SELECT m.*, c.player_key FROM market m JOIN cards c ON c.id=m.card_id AND c.owner_id=m.seller_id
-    WHERE m.status='active' ORDER BY m.created_ms DESC LIMIT 8`).all<ListingRow>()).results;
+export async function marketPage(db: Database, tier = 'todas'): Promise<ListingRow[]> {
+  const where = tier === 'todas' ? '' : ' AND c.tier=?';
+  const stmt = db.prepare("SELECT m.*, c.player_key,c.edition,c.tier FROM market m JOIN cards c ON c.id=m.card_id AND c.owner_id=m.seller_id WHERE m.status='active'" + where + ' ORDER BY m.created_ms DESC LIMIT 8');
+  return (await (tier==='todas'?stmt:stmt.bind(tier)).all<ListingRow>()).results;
 }
 
-export async function buyCard(db: Database, buyerId: string, listingId: string): Promise<{ ok: boolean; player?: Player; price?: number }> {
-  const listing = await db.prepare('SELECT m.*,c.player_key FROM market m JOIN cards c ON c.id=m.card_id WHERE m.id=?').bind(listingId).first<ListingRow>();
+export async function buyCard(db: Database, buyerId: string, listingId: string): Promise<{ ok: boolean; player?: Player; price?: number; edition?: string; tier?: string }> {
+  const listing = await db.prepare('SELECT m.*,c.player_key,c.edition,c.tier FROM market m JOIN cards c ON c.id=m.card_id WHERE m.id=?').bind(listingId).first<ListingRow>();
   if (!listing || listing.seller_id === buyerId || listing.status !== 'active') return { ok: false };
   const nonce = uid();
   const now = Date.now();
@@ -184,7 +201,7 @@ export async function buyCard(db: Database, buyerId: string, listingId: string):
     db.prepare(`UPDATE cards SET owner_id=? WHERE id=? AND owner_id=?
       AND EXISTS(SELECT 1 FROM market WHERE id=? AND buyer_id=? AND sale_nonce=?)`).bind(buyerId, listing.card_id, listing.seller_id, listingId, buyerId, nonce),
   ]);
-  return change(r[0]) ? { ok: true, player: getPlayer(listing.player_key), price: listing.price } : { ok: false };
+  return change(r[0]) ? { ok: true, player: getPlayer(listing.player_key), price: listing.price, edition:listing.edition, tier:listing.tier } : { ok: false };
 }
 
 export async function cancelListing(db: Database, sellerId: string, listingId: string): Promise<boolean> {

@@ -26,6 +26,9 @@ jobs:
       - name: Instalar dependencias
         run: npm install --no-audit --no-fund
 
+      - name: Validar processo Discord Gateway
+        run: npm run gateway:check
+
       - name: Checar tipos
         run: npm run typecheck
 

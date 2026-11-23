@@ -6,8 +6,8 @@
 - Todas as imagens originais pré-existentes foram preservadas em `assets/cards/` e `assets/ui/`.
 
 ## Integração
-- `/fut obter`, `/fut pacote`, `/fut colecao`, `/fut mercado` e `/fut time` utilizam as edições individuais quando disponíveis.
-- `/fut artes` permite consultar todos os lotes e os designs em 2 seções, com botões de paginação.
+- `/s obter`, `/s pacote`, `/s colecao`, `/s mercado` e `/s time` utilizam as edições individuais quando disponíveis.
+- `/s artes` permite consultar todos os lotes e os designs em 2 seções, com botões de paginação.
 - Retratos sem edição individual aproveitável mantêm o cartão anterior.
 - Cada carta na coleção e no mercado segue os dados da base D1; a imagem não altera nome, raridade, OVR, preço nem inventário.
 - O exemplo gráfico de perfil e outros conceitos com números ilustrativos **não** são exibidos como se fossem resultados reais.

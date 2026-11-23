@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getPlayer, PLAYERS, STARTER_KEYS, drawPlayer, rarity } from '../src/catalog.ts';
 import { chooseTeam, simulateMatch, SLOT_POSITION, teamStrength, timeRemaining, PACK_COST } from '../src/game.ts';
-import { COMMANDS } from '../src/commands.ts';
+import { COMMANDS, COMMAND_ROOT } from '../src/commands.ts';
 import { rows, button } from '../src/ui.ts';
 
 test('catálogo contém jogadores de todas as posições sem IDs repetidos', () => {
@@ -51,4 +51,12 @@ test('comandos cobrem gameplay e usam subcomandos válidos', () => {
 test('botões são distribuídos em linhas de 5', () => {
   const out = rows(Array.from({ length: 8 }, (_, i) => button(`Item ${i}`, `item:${i}`))) as { components: unknown[] }[];
   assert.deepEqual(out.map(r => r.components.length), [5, 3]);
+});
+
+
+test('o prefixo principal dos comandos Discord é S (/s)', () => {
+  assert.equal(COMMAND_ROOT, 's');
+  assert.equal(COMMANDS.length, 1);
+  assert.equal(COMMANDS[0].name, 's');
+  assert.ok(COMMANDS[0].options.length >= 17);
 });

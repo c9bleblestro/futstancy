@@ -1,16 +1,19 @@
 {
   "name": "futstancy",
-  "version": "4.0.0",
+  "version": "5.4.0",
   "private": true,
   "type": "module",
-  "description": "Bot de futebol multiplayer do Discord, 100% serverless",
+  "description": "Bot Discord: jogo de futebol em Cloudflare Worker + D1 e Gateway com prefixo S",
   "scripts": {
     "dev": "wrangler dev",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
-    "deploy": "wrangler deploy && wrangler d1 migrations apply DB --remote",
+    "deploy": "wrangler d1 migrations apply DB --remote && wrangler deploy",
     "db:local": "wrangler d1 migrations apply DB --local",
-    "db:remote": "wrangler d1 migrations apply DB --remote"
+    "db:remote": "wrangler d1 migrations apply DB --remote",
+    "start": "node gateway/start.mjs",
+    "gateway:start": "node gateway/start.mjs",
+    "gateway:check": "node --check gateway/start.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -29,10 +32,14 @@
       },
       "DISCORD_BOT_TOKEN": {
         "description": "Token do bot em Discord Developer Portal > Bot; sempre armazenar como secret."
+      },
+      "PREFIX_GATEWAY_SECRET": {
+        "description": "Chave secreta HTTPS do Gateway para o Worker; mantenha apenas em secrets."
       }
     }
   },
   "dependencies": {
-    "@cf-wasm/resvg": "^0.3.5"
+    "@cf-wasm/resvg": "^0.3.5",
+    "discord.js": "^14.28.1"
   }
 }

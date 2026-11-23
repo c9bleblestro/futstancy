@@ -33,6 +33,7 @@ test('galeria de artes pagina as imagens sem mostrar dados fictícios como reais
   assert.equal(galleryUrls('cards',0).length,6);
   assert.equal(galleryUrls('designs',10).length,1);
   const comps=buildComponents('🎨 Galeria de artes — Designs 1/11','Prévia ilustrativa');
-  const gallery=comps.find((x:any)=>x.type===12) as any;
+  const panel=comps.find((x:any)=>x.type===17) as any;
+  const gallery=panel.components.find((x:any)=>x.type===12) as any;
   assert.equal(gallery.items.length,6);
 });
