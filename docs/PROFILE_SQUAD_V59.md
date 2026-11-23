@@ -26,3 +26,10 @@
 
 ## Publicação
 Sem migrações D1 novas. Merge no GitHub não publica o Worker sem configuração Cloudflare. Após publicação, confirme /health versão 5.9.0 e teste /fut perfil, Atualizar e /fut time no Discord.
+
+## Hotfix V5.9.1 — imagem quebrada no Discord
+- O gerador 4-3-3 tenta manter as miniaturas originais. Quando uma delas causar falha no renderizador PNG, o Worker repete a renderização sem as imagens JPEG incorporadas, **mantendo o gramado, os nomes, os OVRs e os titulares**; não retorna uma imagem quebrada nesses casos.
+- A resposta contém o cabeçalho X-Futstancy-Image-Mode: full ou fallback. Se o modo for fallback, a resposta não é colocada em cache para que uma próxima atualização possa restabelecer as miniaturas.
+- A URL do campo ganhou chave v591 para invalidar a imagem anterior que o Discord tentou carregar.
+- No perfil, se o titular de maior OVR não tem uma carta individual aprovada, o painel usa sua **foto original do catálogo** quando disponível. Não altera o inventário nem cria uma carta nova.
+- Não foi possível consultar logs privados do Cloudflare a partir do GitHub. Este hotfix é preventivo: um deploy seguido de teste real no Discord continua necessário.
