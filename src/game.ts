@@ -7,16 +7,17 @@ export const CLAIM_COOLDOWN_MS = 25 * 60 * 1000;
 export const DAILY_COOLDOWN_MS = 20 * 60 * 60 * 1000;
 export const PACK_COST = 900;
 
-export function chooseTeam<T extends { id: string; player_key: string }>(cards: T[]): T[] | null {
-  const used = new Set<string>();
-  const team: T[] = [];
-  for (const pos of SLOT_POSITION) {
-    const candidate = cards
-      .filter(card => !used.has(card.id) && getPlayer(card.player_key)?.pos === pos)
-      .sort((a, b) => (getPlayer(b.player_key)?.ovr ?? 0) - (getPlayer(a.player_key)?.ovr ?? 0))[0];
-    if (!candidate) return null;
-    used.add(candidate.id);
-    team.push(candidate);
+export function chooseTeam<T extends { id: string; player_key: string; tier?: string; acquired_ms?: number }>(cards: T[]): T[] | null {
+  const tiers:Record<string,number>={eclipse:6,lendario:5,icone:4,ouro:3,prata:2,comum:1,legado:0};
+  const best=(a:T,b:T)=>
+    (getPlayer(b.player_key)?.ovr??0)-(getPlayer(a.player_key)?.ovr??0)||
+    (tiers[b.tier??'legado']??0)-(tiers[a.tier??'legado']??0)||
+    (b.acquired_ms??0)-(a.acquired_ms??0)||a.id.localeCompare(b.id);
+  const used=new Set<string>(),team:T[]=[];
+  for(const pos of SLOT_POSITION){
+    const candidate=cards.filter(card=>!used.has(card.id)&&getPlayer(card.player_key)?.pos===pos).sort(best)[0];
+    if(!candidate)return null;
+    used.add(candidate.id);team.push(candidate);
   }
   return team;
 }
