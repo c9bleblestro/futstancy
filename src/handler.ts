@@ -218,8 +218,67 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
   const uid = actorId(i);
   if (!uid) return message('Não consegui identificar seu usuário do Discord.', true);
 
+  if(i.type===5 && (i.data?.custom_id??'').startsWith('colprice:')){
+    const [,owner,cardId,tier,pageRaw]=(i.data?.custom_id??'').split(':');
+    if(uid!==owner)return message('Este anúncio não pertence a você.');
+    const rawPrice=i.data?.components?.flatMap(row=>row.components??[])
+      .find(input=>input.custom_id==='price')?.value??'';
+    if(!/^\d{3,6}$/.test(rawPrice))return message('Informe um valor inteiro de 100 a 200000 coins.');
+    const price=Number(rawPrice);
+    if(!Number.isInteger(price)||price<100||price>200000)
+      return message('O preço deve ficar entre 100 e 200.000 coins.');
+    const result=await listCard(env.DB,uid,cardId,price);
+    const safePage=Math.max(0,Math.trunc(Number(pageRaw)||0));
+    return result.ok
+      ? card('✅ Carta anunciada',
+          'Seu exemplar está disponível no mercado!\n\n**Preço:** '+price.toLocaleString('pt-BR')+
+          ' coins\n**Você receberá:** '+Math.floor(price*0.95).toLocaleString('pt-BR')+
+          ' coins\n**Código:** '+String.fromCharCode(96)+result.id+String.fromCharCode(96),
+          GREEN,true,rows([button('← Voltar ao álbum','col:'+owner+':'+tier+':'+safePage,2)]),[])
+      : message('Não foi possível anunciar. Confira se a carta é sua, não está escalada nem anunciada.');
+  }
+
   if (i.type === 3) {
     const id = i.data?.custom_id ?? '';
+    if(id.startsWith('colview:')){
+      const [,owner,tier,pageRaw]=id.split(':');
+      if(uid!==owner)return message('Essa coleção pertence a outro jogador.',true);
+      if(!isCollectionTier(tier))return message('Filtro inválido.',true);
+      const cardId=i.data?.values?.[0]??'';
+      return showCollectionCard(env,uid,cardId,tier,Math.max(0,Math.trunc(Number(pageRaw)||0)));
+    }
+    if(id.startsWith('colfilter:')){
+      const owner=id.slice('colfilter:'.length);
+      if(uid!==owner)return message('Essa coleção pertence a outro jogador.',true);
+      const tier=i.data?.values?.[0]??'todas';
+      if(!isCollectionTier(tier))return message('Filtro de raridade inválido.',true);
+      return showCollection(env,uid,0,tier);
+    }
+    if(id.startsWith('colslot:')){
+      const [,owner,cardId,tier,pageRaw]=id.split(':');
+      if(uid!==owner)return message('Essa carta pertence a outro jogador.',true);
+      if(!isCollectionTier(tier)||!/^[a-f0-9]{16}$/.test(cardId))
+        return message('Carta inválida.',true);
+      const slot=Number(i.data?.values?.[0]??'');
+      if(!Number.isInteger(slot)||slot<1||slot>11)return message('Posição inválida.',true);
+      const result=await setSlot(env.DB,uid,cardId,slot);
+      if(!result.startsWith('✅'))return message(result,true);
+      return showCollectionCard(env,uid,cardId,tier,Math.max(0,Math.trunc(Number(pageRaw)||0)));
+    }
+    if(id.startsWith('colsell:')){
+      const [,owner,cardId,tier,pageRaw]=id.split(':');
+      if(uid!==owner)return message('Essa carta pertence a outro jogador.',true);
+      if(!isCollectionTier(tier)||!/^[a-f0-9]{16}$/.test(cardId))
+        return message('Carta inválida.',true);
+      return {type:9,data:{
+        custom_id:'colprice:'+owner+':'+cardId+':'+tier+':'+Math.max(0,Math.trunc(Number(pageRaw)||0)),
+        title:'Anunciar carta no mercado',
+        components:[{type:1,components:[{
+          type:4,custom_id:'price',label:'Preço (100 a 200000 coins)',
+          placeholder:'1500',style:1,min_length:3,max_length:6,required:true,
+        }]}],
+      }};
+    }
     if (id.startsWith('col:')) {
       const [,owner,part3,part4]=id.split(':');
       if(uid!==owner)return message('Essa coleção pertence a outro jogador.',true);
