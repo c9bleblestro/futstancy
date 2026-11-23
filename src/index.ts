@@ -4,6 +4,7 @@ import { shouldDeferInteraction, completeDeferredInteraction, reportDeferredFail
 import { renderArt } from './art.ts';
 import {renderSquadImage} from './squad-image.ts';
 import {renderProfileImage} from './profile-image.ts';
+import {renderMarketBannerImage} from './market-art-v60.ts';
 import { jsonResponse } from './ui.ts';
 import { handleTextPrefixRequest } from './prefix-endpoint.ts';
 import type { Env, Interaction } from './types.ts';
@@ -64,10 +65,11 @@ export default {
     const url = new URL(request.url);
     if(url.pathname==='/prefix/execute')return handleTextPrefixRequest(request,env);
     if (request.method === 'GET' && url.pathname === '/art/status') {
-      return jsonResponse({ status: 'ready', version: '5.9.2', routes: ['player.png', 'collection.png', 'market.png', 'team.png', 'pack.png', 'score.png', 'banner.png','squad.png','profile.png'] });
+      return jsonResponse({ status: 'ready', version: '5.9.3', routes: ['player.png', 'collection.png', 'market.png', 'team.png', 'pack.png', 'score.png', 'banner.png','squad.png','profile.png','market-banner.png'] });
     }
     if(request.method==='GET'&&url.pathname==='/art/squad.png')return renderSquadImage(request,env);
     if(request.method==='GET'&&url.pathname==='/art/profile.png')return renderProfileImage(request,env);
+    if(request.method==='GET'&&url.pathname==='/art/market-banner.png')return renderMarketBannerImage();
     if (request.method === 'GET' && url.pathname.startsWith('/art/')) {
       const artwork = await renderArt(request);
       if (artwork) return artwork;
@@ -77,7 +79,7 @@ export default {
       return new Response(landing, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60', 'X-Content-Type-Options': 'nosniff' } });
     }
     if (request.method === 'GET' && url.pathname === '/health') {
-      return jsonResponse({ name: 'Futstancy', worker: 'online', version: '5.9.2', interactionEndpoint: '/interactions' });
+      return jsonResponse({ name: 'Futstancy', worker: 'online', version: '5.9.3', interactionEndpoint: '/interactions' });
     }
     if (request.method !== 'POST' || url.pathname !== '/interactions') {
       return new Response('Not Found', { status: 404 });
