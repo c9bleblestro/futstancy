@@ -1,10 +1,10 @@
 import { getPlayer } from './catalog.ts';
 import { COMMAND_ROOT } from './commands.ts';
 import { SLOT_POSITION, timeRemaining, teamStrength } from './game.ts';
-import { account, start, claim, daily, collectionPage, lineup, lineupPlayers, autoLineup, setSlot, createChallenge, resolveChallenge, openPack, marketPage, listCard, buyCard, cancelListing, leaderboard } from './storage.ts';
-import { card, message, update, rows, button, GOLD, GREEN, ERROR, PURPLE } from './ui.ts';
+import { account, start, claim, daily, collectionPage, ALBUM_PAGE_SIZE, lineup, lineupPlayers, autoLineup, setSlot, createChallenge, resolveChallenge, openPack, marketPage, listCard, buyCard, cancelListing, leaderboard } from './storage.ts';
+import { card, message, update, rows, button, stringSelect, GOLD, GREEN, ERROR, PURPLE } from './ui.ts';
 import { SHOWCASE, type GalleryKind } from './editions.ts';
-import { PACKS, PACK_TYPES, PACK_ODDS, TIER_NAMES, GALLERY_TIERS, drawEdition, editionArtUrl, assetArtUrl, galleryArtFiles, tierCount, type PackType } from './packs.ts';
+import { PACKS, PACK_TYPES, PACK_ODDS, PLAYABLE_ARTS, TIER_NAMES, GALLERY_TIERS, drawEdition, editionArtUrl, assetArtUrl, galleryArtFiles, tierCount, type PackType } from './packs.ts';
 import type { Env, Interaction, Option } from './types.ts';
 
 const help = [
@@ -65,29 +65,84 @@ function showGallery(owner:string,page:number,kind:GalleryKind,tier='todas') {
   return card(title,info,PURPLE,true,rows(controls),files.slice(safe*6,safe*6+6).map(assetArtUrl));
 }
 
+const ALBUM_FILTERS:readonly {value:string;label:string}[]=[
+  {value:'todas',label:'Todas as cartas'},
+  {value:'comum',label:'Comum'},
+  {value:'prata',label:'Prata'},
+  {value:'ouro',label:'Ouro'},
+  {value:'icone',label:'Ícone'},
+  {value:'lendario',label:'Lendário'},
+  {value:'eclipse',label:'Eclipse'},
+  {value:'legado',label:'Clássicas'},
+];
+
 async function showCollection(env:Env,owner:string,page:number,tier='todas'){
   const selected=isCollectionTier(tier)?tier:'todas';
   const data=await collectionPage(env.DB,owner,page,selected);
-  const safe=Math.min(Math.max(0,page),data.pages-1);
-  const lines=data.cards.map((c,index)=>{
-    const p=getPlayer(c.player_key);
-    const name=p?.name??c.player_key;
-    return '**'+String(safe*6+index+1).padStart(2,'0')+'  ·  '+name+'**\n'+
-      '-# '+(p?.pos??'---')+'   |   '+(p?.ovr??'—')+' OVR   |   '+(TIER_NAMES[c.tier]??c.tier)+
-      '   •   '+c.edition.replace(/_/g,' ')+'\n'+
-      '-# Carta: '+String.fromCharCode(96)+c.id+String.fromCharCode(96);
-  });
-  const controls=[
-    button('◀ Voltar','col:'+owner+':'+selected+':'+(safe-1),2,safe===0),
-    button('Avançar ▶','col:'+owner+':'+selected+':'+(safe+1),1,safe>=data.pages-1),
-    ...COLLECTION_FILTERS.map(t=>button(TIER_NAMES[t],'col:'+owner+':'+t+':0')),
-  ];
-  const description='**'+data.total+' cartas encontradas**   •   Página '+(safe+1)+' de '+data.pages+
-    '   •   Filtro: **'+TIER_NAMES[selected]+'**\n\n'+
-    (lines.join('\n\n')||'Nenhuma carta nesta raridade.')+
-    '\n\n-# Use o ID de uma carta em /s escalar ou /s vender.';
-  return card('🗂️ Sua coleção',description,PURPLE,true,rows(controls),
+  const safe=Math.min(Math.max(0,Number.isFinite(page)?Math.trunc(page):0),data.pages-1);
+  const available=selected==='legado'?0:
+    (selected==='todas'?PLAYABLE_ARTS.length:PLAYABLE_ARTS.filter(a=>a.tier===selected).length);
+  const progress=available?Math.min(12,Math.round(data.discovered/available*12)):0;
+  const meter=available?'▰'.repeat(progress)+'▱'.repeat(12-progress):'';
+  const summary='**'+data.total+' cartas** no inventário  ·  **'+data.discovered+
+    (available?'/'+available:'')+' edições distintas'+
+    '\n'+(available?meter+'   '+Math.min(100,Math.round(data.discovered/available*100))+'%\n':'')+
+    '-# '+TIER_NAMES[selected]+'  •  Página '+(safe+1)+'/'+data.pages+
+    '  •  '+ALBUM_PAGE_SIZE+' cartas por página\n\n'+
+    (data.cards.length?'**Escolha uma carta no menu abaixo** para consultar atributos, ID e ações.':
+      'Nenhuma carta nesta categoria. Conquiste cartas com /s obter ou /s pacote.')+
+    '\n-# Edições repetidas contam como exemplares, não como novas descobertas.';
+  const pick=data.cards.length?[stringSelect('colview:'+owner+':'+selected+':'+safe,
+    '🃏 Escolher carta e abrir detalhes',
+    data.cards.map((c,i)=>{
+      const player=getPlayer(c.player_key);
+      return {label:'#'+String(safe*ALBUM_PAGE_SIZE+i+1).padStart(2,'0')+' · '+(player?.name??'Jogador'),
+        value:c.id,
+        description:(player?.pos??'--')+' · '+(player?.ovr??'--')+' OVR · '+(TIER_NAMES[c.tier]??c.tier)};
+    }))]:[];
+  const filter=stringSelect('colfilter:'+owner,'✨ Filtrar por raridade',
+    ALBUM_FILTERS.map(item=>({label:item.label,value:item.value,default:item.value===selected})));
+  const actions=rows([
+    button('◀ Anterior','col:'+owner+':'+selected+':'+(safe-1),2,safe===0),
+    button('Próxima página ▶','col:'+owner+':'+selected+':'+(safe+1),1,safe>=data.pages-1),
+    button('🛒 Mercado','mkt:todas',2),
+    button('🎨 Galeria','art:'+owner+':cards:todas:0',2),
+  ]);
+  return card('📚 Álbum Futstancy',summary,PURPLE,true,[...pick,filter,...actions],
     data.cards.map(c=>editionArtUrl(c.player_key,c.edition)).filter(Boolean));
+}
+
+async function showCollectionCard(env:Env,owner:string,cardId:string,tier='todas',page=0){
+  if(!/^[a-f0-9]{16}$/.test(cardId))return message('ID de carta inválido.');
+  const row=await env.DB.prepare('SELECT * FROM cards WHERE owner_id=? AND id=?')
+    .bind(owner,cardId).first<import('./types.ts').CardRow>();
+  if(!row)return message('Esta carta não pertence à sua coleção.');
+  const p=getPlayer(row.player_key);
+  if(!p)return message('Jogador não está presente no catálogo.');
+  const [team,listed]=await Promise.all([
+    lineup(env.DB,owner),
+    env.DB.prepare("SELECT id FROM market WHERE card_id=? AND seller_id=? AND status='active'")
+      .bind(cardId,owner).first<{id:string}>(),
+  ]);
+  const slot=team.find(c=>c.id===cardId)?.slot;
+  const status=listed?'🛒 Anunciada no mercado':slot?'✅ Titular na vaga '+slot:'Disponível';
+  const detail='**'+p.name+'**   •   '+p.ovr+' OVR\n'+
+    '-# '+p.country+'   |   '+p.pos+'   |   '+(TIER_NAMES[row.tier]??row.tier)+'\n\n'+
+    '**EDIÇÃO**   '+row.edition.replace(/_/g,' ')+'\n'+
+    '**SITUAÇÃO**   '+status+'\n'+
+    '**ID DO EXEMPLAR**\n'+String.fromCharCode(96)+row.id+String.fromCharCode(96)+
+    '\n\n-# Esta arte pertence a este exemplar e não muda ao navegar ou negociar.';
+  const positions=SLOT_POSITION.flatMap((pos,index)=>pos===p.pos?
+    [{label:'Vaga '+(index+1)+' · '+pos,value:String(index+1)}]:[]);
+  const place=!listed&&positions.length?
+    [stringSelect('colslot:'+owner+':'+cardId+':'+tier+':'+page,
+      '⚽ Escolher posição para escalar',positions)]:[];
+  const actions=rows([
+    button('← Voltar ao álbum','col:'+owner+':'+tier+':'+page,2),
+    button('🏷️ Anunciar no mercado','colsell:'+owner+':'+cardId+':'+tier+':'+page,1,Boolean(listed||slot)),
+  ]);
+  return card('🃏 Ficha da carta',detail,PURPLE,true,[...place,...actions],
+    [editionArtUrl(row.player_key,row.edition)]);
 }
 
 async function showTeam(env:Env,owner:string){
