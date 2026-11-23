@@ -53,7 +53,7 @@ function showGallery(owner:string,page:number,kind:GalleryKind,tier='todas') {
   const heading=kind==='cards'?'Cartas · '+(TIER_NAMES[selected]??'Todas'):'Designs';
   const title='🎨 Galeria de artes — '+heading+' '+(safe+1)+'/'+pages;
   const info=kind==='cards'
-    ? 'Lotes separados por raridade. Recortes são apenas prévias e não entram em pacotes; o jogo só entrega artes completas.'
+    ? 'Somente artes completas e aprovadas. Fotos recortadas e molduras antigas não aparecem mais no álbum nem nesta galeria.'
     : 'Conceitos de interface. Os preços, saldos e resultados nas prévias são ilustrativos.';
   const controls=[
     button('◀ Anterior','art:'+owner+':'+kind+':'+selected+':'+(safe-1),2,safe===0),
