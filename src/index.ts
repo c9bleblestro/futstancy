@@ -1,5 +1,6 @@
 import { COMMANDS, COMMAND_VERSION } from './commands.ts';
 import { handleInteraction } from './handler.ts';
+import { shouldDeferInteraction, completeDeferredInteraction, reportDeferredFailure } from './deferred.ts';
 import { renderArt } from './art.ts';
 import { jsonResponse } from './ui.ts';
 import { handleTextPrefixRequest } from './prefix-endpoint.ts';
@@ -61,7 +62,7 @@ export default {
     const url = new URL(request.url);
     if(url.pathname==='/prefix/execute')return handleTextPrefixRequest(request,env);
     if (request.method === 'GET' && url.pathname === '/art/status') {
-      return jsonResponse({ status: 'ready', version: '5.5.0', routes: ['player.png', 'collection.png', 'market.png', 'team.png', 'pack.png', 'score.png', 'banner.png'] });
+      return jsonResponse({ status: 'ready', version: '5.6.0', routes: ['player.png', 'collection.png', 'market.png', 'team.png', 'pack.png', 'score.png', 'banner.png'] });
     }
     if (request.method === 'GET' && url.pathname.startsWith('/art/')) {
       const artwork = await renderArt(request);
@@ -72,7 +73,7 @@ export default {
       return new Response(landing, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60', 'X-Content-Type-Options': 'nosniff' } });
     }
     if (request.method === 'GET' && url.pathname === '/health') {
-      return jsonResponse({ name: 'Futstancy', worker: 'online', version: '5.5.0', interactionEndpoint: '/interactions' });
+      return jsonResponse({ name: 'Futstancy', worker: 'online', version: '5.6.0', interactionEndpoint: '/interactions' });
     }
     if (request.method !== 'POST' || url.pathname !== '/interactions') {
       return new Response('Not Found', { status: 404 });
@@ -90,6 +91,16 @@ export default {
       // Discord chama PING na validação do endpoint. Cadastro automático se já houver secrets.
       ctx.waitUntil(ensureCommands(env));
       return jsonResponse({ type: 1 });
+    }
+    if(shouldDeferInteraction(interaction,env)){
+      // O Discord só permite 3 segundos para confirmar o clique.
+      // A confirmação tipo 6 é imediata; depois editamos a mensagem original.
+      ctx.waitUntil(completeDeferredInteraction(interaction,env).catch(async error=>{
+        console.error('[COMPONENT UPDATE]',error instanceof Error?error.message:String(error));
+        try{await reportDeferredFailure(interaction,env);}
+        catch(e){console.error('[COMPONENT FOLLOWUP]',e instanceof Error?e.message:String(e));}
+      }));
+      return jsonResponse({type:6});
     }
     try {
       return jsonResponse(await handleInteraction(interaction, env));

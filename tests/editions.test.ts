@@ -22,15 +22,17 @@ test('cada jogador com carta completa usa imagem real sem recortes de montagem',
   }
 });
 
-test('jogador sem arte nova cai na carta do catálogo anterior',()=>{
+test('jogador sem arte individual não carrega moldura velha com fotografia recortada',()=>{
   const p=getPlayer('unai')!;
-  assert.match(playerArtUrl(p),/\/assets\/cards\/unai\.jpg/);
+  assert.equal(playerArtUrl(p),'');
 });
 
 test('galeria de artes pagina as imagens sem mostrar dados fictícios como reais',()=>{
-  assert.equal(galleryPages('cards'),13);
+  assert.equal(galleryPages('cards'),9);
   assert.equal(galleryPages('designs'),11);
   assert.equal(galleryUrls('cards',0).length,6);
+  assert.equal(galleryUrls('cards',8).length,5);
+  assert.ok(Array.from({length:9},(_,i)=>galleryUrls('cards',i)).flat().every(url=>!url.includes('/assets/cards/')&&!url.includes('_previa')&&!url.includes('premium_lote3')));
   assert.equal(galleryUrls('designs',10).length,1);
   const comps=buildComponents('🎨 Galeria de artes — Designs 1/11','Prévia ilustrativa');
   const panel=comps.find((x:any)=>x.type===17) as any;

@@ -13,7 +13,7 @@ export const GREEN = 0x34d399;
 export const ERROR = 0xf87171;
 export const V2 = 1 << 15;
 const ASSETS = 'https://raw.githubusercontent.com/c9bleblestro/futstancy/main/assets';
-const REV = 'futstancy-v4-20261122';
+const REV = 'futstancy-v5-6-20261123';
 const art = (player:Player,index=0) => playerArtUrl(player,index);
 
 type Btn = {label:string;id:string;style?:number;disabled?:boolean};

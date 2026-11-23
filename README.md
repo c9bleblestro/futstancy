@@ -25,7 +25,7 @@ Detalhes e restrições em [docs/ALBUM_V5_4.md](docs/ALBUM_V5_4.md).
 
 ## 📦 V5 — Loja de pacotes por raridade
 
-A biblioteca inclui **75 artes** (53 completas jogáveis e 22 prévias); as artes completas alimentam os pacotes **Comum (450), Prata (900), Ouro (2.100), Ícone (4.500), Lendário (8.500), Eclipse (12.500)** e **Misto (900)**, sempre com 3 cartas. Todos os valores em coins.
+A biblioteca original inclui **75 imagens** (53 completas jogáveis e 22 prévias arquivadas e ocultas); apenas as completas alimentam os pacotes **Comum (450), Prata (900), Ouro (2.100), Ícone (4.500), Lendário (8.500), Eclipse (12.500)** e **Misto (900)**, sempre com 3 cartas. Todos os valores em coins.
 
 No Misto, as chances por carta são: **55% Comum, 22% Prata, 12% Ouro, 7% Ícone, 3% Lendário e 1% Eclipse**. Pacotes específicos garantem sua raridade. Artes Premium (recortadas) não são sorteadas. Cartas repetidas podem vir.
 

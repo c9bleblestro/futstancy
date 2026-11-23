@@ -17,7 +17,8 @@ export const PACKS: Record<PackType, PackDefinition> = {
   eclipse: { label: '🌑 Eclipse', cost: 12500, description: '3 cartas Eclipse garantidas' },
 };
 export const PACK_TYPES = Object.keys(PACKS) as PackType[];
-export const GALLERY_TIERS: ArtTier[] = ['comum', 'prata', 'ouro', 'premium', 'icone', 'lendario', 'eclipse'];
+// Premium e recortes antigos foram retirados da galeria jogável.
+export const GALLERY_TIERS: ArtTier[] = ['comum', 'prata', 'ouro', 'icone', 'lendario', 'eclipse'];
 
 export const TIER_NAMES: Record<string,string> = {
   comum:'Comum',prata:'Prata',ouro:'Ouro',premium:'Premium (prévia)',
@@ -61,6 +62,7 @@ export function assetArtUrl(path:string):string {
 export function editionArtUrl(playerKey: string, edition: string): string {
   const item = (EDITIONS[playerKey] ?? []).find(e => e.edition === edition && e.quality === 'full');
   if (item) return assetArtUrl(item.file);
+  // Edição legado ou prévia removida: usar somente arte completa aprovada.
   const player = getPlayer(playerKey);
   return player ? playerArtUrl(player, 0) : '';
 }
@@ -92,5 +94,5 @@ export function drawEditionPack(type:PackType='misto',random:()=>number=Math.ran
 }
 
 export function galleryArtFiles(tier:ArtTier|'todas'='todas'):string[] {
-  return ALL_ARTS.filter(a=>tier==='todas'||a.tier===tier).map(a=>a.file);
+  return ALL_ARTS.filter(a=>a.quality==='full'&&(tier==='todas'||a.tier===tier)).map(a=>a.file);
 }

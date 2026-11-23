@@ -162,7 +162,9 @@ test('álbum V5: oito miniaturas por página e progresso inclui atletas clássic
   const flatten=(items:any[]):any[]=>items.flatMap(x=>[x,...(Array.isArray(x.components)?flatten(x.components):[])]);
   const response=await handleInteraction(sender({name:'fut',options:[{type:1,name:'colecao'}]}),{DB:db} as Env) as any;
   const nodes=flatten(response.data.components);
-  assert.equal(nodes.filter(x=>x.type===12).flatMap(x=>x.items).length,8);
+  const visibleArts=nodes.filter(x=>x.type===12).flatMap(x=>x.items);
+  assert.ok(visibleArts.length>0&&visibleArts.length<=8);
+  assert.ok(visibleArts.every((item:any)=>!item.media.url.includes('/assets/cards/')));
   const menu=nodes.find(x=>x.type===3&&x.custom_id.startsWith('colview:'));
   assert.ok(menu);
   assert.equal(menu.options.length,8);
