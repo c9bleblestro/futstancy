@@ -221,8 +221,9 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
   if(i.type===5 && (i.data?.custom_id??'').startsWith('colprice:')){
     const [,owner,cardId,tier,pageRaw]=(i.data?.custom_id??'').split(':');
     if(uid!==owner)return message('Este anúncio não pertence a você.');
-    const rawPrice=i.data?.components?.flatMap(row=>row.components??[])
-      .find(input=>input.custom_id==='price')?.value??'';
+    const rawPrice=i.data?.components?.flatMap(row=>[
+      ...(row.component?[row.component]:[]),...(row.components??[]),
+    ]).find(input=>input.custom_id==='price')?.value??'';
     if(!/^\d{3,6}$/.test(rawPrice))return message('Informe um valor inteiro de 100 a 200000 coins.');
     const price=Number(rawPrice);
     if(!Number.isInteger(price)||price<100||price>200000)
@@ -273,10 +274,13 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<objec
       return {type:9,data:{
         custom_id:'colprice:'+owner+':'+cardId+':'+tier+':'+Math.max(0,Math.trunc(Number(pageRaw)||0)),
         title:'Anunciar carta no mercado',
-        components:[{type:1,components:[{
-          type:4,custom_id:'price',label:'Preço (100 a 200000 coins)',
-          placeholder:'1500',style:1,min_length:3,max_length:6,required:true,
-        }]}],
+        components:[{type:18,label:'Preço em coins',
+          description:'De 100 a 200000 coins; taxa de 5% na venda.',
+          component:{
+            type:4,custom_id:'price',placeholder:'1500',
+            style:1,min_length:3,max_length:6,required:true,
+          },
+        }],
       }};
     }
     if (id.startsWith('col:')) {
