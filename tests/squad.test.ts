@@ -82,7 +82,7 @@ test('SVG do campo inclui 11 posições, jogadores reais e placeholders sem mold
   assert.ok(!url.includes(rows[0].id));
   const missing=buildSquadSvg([]);
   assert.match(missing,/0\/11 TITULARES/);
-  assert.match(missing,/VAGA VAZIA/);
+  assert.match(missing,/VAGA LIVRE/);
   db.client.close();
 });
 
