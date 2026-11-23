@@ -29,7 +29,7 @@ export interface Interaction {
   guild_id?: string;
   member?: { user?: { id: string; username: string } };
   user?: { id: string; username: string };
-  data?: { name?: string; options?: Option[]; custom_id?: string; values?: string[]; components?: { type?: number; components?: { type?: number; custom_id?: string; value?: string }[] }[] };
+  data?: { name?: string; options?: Option[]; custom_id?: string; values?: string[]; components?: { type?: number; component?: { type?: number; custom_id?: string; value?: string }; components?: { type?: number; custom_id?: string; value?: string }[] }[] };
 }
 export interface Account {
   user_id: string;
