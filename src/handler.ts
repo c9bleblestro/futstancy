@@ -1,5 +1,6 @@
 import { getPlayer, PLAYERS } from './catalog.ts';
 import {squadPanel,squadCandidates,squadDetail} from './squad-ui.ts';
+import {profilePanel} from './profile-ui.ts';
 import { COMMAND_ROOT } from './commands.ts';
 import { SLOT_POSITION, timeRemaining, teamStrength } from './game.ts';
 import { account, start, claim, daily, collectionPage, ALBUM_PAGE_SIZE, lineup, lineupPlayers, autoLineup, setSlot, createChallenge, resolveChallenge, openPack, marketPage, listCard, buyCard, cancelListing, leaderboard } from './storage.ts';
@@ -109,6 +110,7 @@ async function showCollection(env:Env,owner:string,page:number,tier='todas'){
     button('🛒 Mercado','mktowner:'+owner+':todas',2),
     button('🎨 Galeria','art:'+owner+':cards:todas:0',2),
     button('⚽ Time','team:view:'+owner,2),
+    button('🪪 Perfil','profile:refresh:'+owner,2),
   ]);
   return card('📚 Álbum Futstancy',summary,PURPLE,true,[...pick,filter,...actions],
     data.cards.map(c=>editionArtUrl(c.player_key,c.edition)).filter(Boolean));
@@ -227,6 +229,15 @@ async function dispatchInteraction(i: Interaction, env: Env): Promise<object> {
 
   if (i.type === 3) {
     const id = i.data?.custom_id ?? '';
+    if(id.startsWith('profile:')){
+      const [,action,owner]=id.split(':');
+      if(owner!==uid)return message('Esse perfil pertence a outro treinador.',true);
+      if(action==='refresh')return profilePanel(env,owner,i);
+      if(action==='team')return showTeam(env,owner);
+      if(action==='collection')return showCollection(env,owner,0);
+      if(action==='market')return showMarket(env);
+      return message('Ação do perfil desconhecida.',true);
+    }
     if(id.startsWith('team:')){
       const [,action,owner,slotRaw,pageRaw]=id.split(':');
       if(owner!==uid)return message('Esse time pertence a outro jogador.',true);
@@ -407,22 +418,7 @@ async function dispatchInteraction(i: Interaction, env: Env): Promise<object> {
   const me = await account(env.DB, uid);
   if (!me) return needStart();
 
-  if(action==='perfil'){
-    const games=me.wins+me.draws+me.losses;
-    const points=me.wins*3+me.draws;
-    const pct=games?Math.round(me.wins/games*100):0;
-    return card('🪪 Perfil do treinador',
-      '### '+tag(uid)+'\n\n'+
-      '**🪙 CARTEIRA**\n'+
-      '**'+me.coins.toLocaleString('pt-BR')+' coins** disponíveis\n\n'+
-      '**🏟️ DESEMPENHO**\n'+
-      '**'+games+'** partidas   •   **'+points+'** pontos   •   **'+pct+'%** de vitórias\n'+
-      '🟢 '+me.wins+' vitórias   ⚪ '+me.draws+' empates   🔴 '+me.losses+' derrotas\n\n'+
-      '**⚽ ESTATÍSTICAS**\n'+
-      me.goals_for+' gols marcados   •   '+me.goals_against+' gols sofridos\n\n'+
-      '-# Melhore a equipe com /fut colecao e /fut time.',
-      PURPLE,true);
-  }
+  if(action==='perfil')return profilePanel(env,uid,i);
   if(action==='obter'){
     const drop=drawEdition('misto');
     const result=await claim(env.DB,uid,drop.player,drop.edition);
