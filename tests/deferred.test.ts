@@ -16,7 +16,7 @@ function capture(){
   const calls:{url:string;method:string;data:any}[]=[];
   const fetcher=async(url:string,init?:RequestInit)=>{
     calls.push({url,method:init?.method??'GET',data:JSON.parse(String(init?.body??'{}'))});
-    return new Response('',{status:204});
+    return new Response(null,{status:204});
   };
   return {calls,fetcher};
 }
