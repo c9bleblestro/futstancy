@@ -56,7 +56,8 @@ test('botões são distribuídos em linhas de 5', () => {
 
 test('slash principal Discord é /fut; S é reservado para mensagens', () => {
   assert.equal(COMMAND_ROOT, 'fut');
-  assert.equal(COMMANDS.length, 1);
+  assert.equal(COMMANDS.length, 3);
+  assert.deepEqual(COMMANDS.slice(1).map(c=>c.name), ['sincronizar', 'parar_sincronizacao']);
   assert.equal(COMMANDS[0].name, 'fut');
   assert.ok(COMMANDS[0].options.length >= 17);
 });
