@@ -2,7 +2,7 @@ import { PLAYERS, type Player } from './catalog.ts';
 import { playerArtUrl, galleryUrls } from './editions.ts';
 
 /**
- * FUTSTANCY V5.9 — dynamic tactical 4-3-3 squad layout for all Discord responses.
+ * FUTSTANCY V5.9.3 — dynamic tactical 4-3-3 squad layout for all Discord responses.
  * Only Components V2 are sent: branded Containers (17), Text Displays (10),
  * Media Galleries (12), Separators (14) and working Action Rows (1).
  * All actual player/coin values are supplied by the handler from D1, never art.
@@ -103,6 +103,7 @@ export function systemBanner(title:string|undefined):string|null {
   else if(/perfil do treinador/.test(t))key='perfil';
   else if(/recompensa|daily/.test(t))key='daily';
   else if(/bem-vindo|clube já existente|guia do treinador|primeiro, crie/.test(t))key='inicio';
+  if(key==='mercado')return 'https://futstancy.likeparaopeixe.workers.dev/art/market-banner.png?rev=v593';
   return key?BANNER_CDN+key+'.jpg?v=futstancy-v5-7':null;
 }
 
