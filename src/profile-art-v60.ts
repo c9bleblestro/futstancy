@@ -66,7 +66,7 @@ export function buildPremiumProfileSvg(me:Account,rows:LineupRow[],identity:Iden
       '" preserveAspectRatio="xMidYMid meet"/>'
     : '<g><path d="M755 960H909L939 986V1156L916 1186H752L727 1158V986Z" fill="#05323c" stroke="#50cebf" stroke-width="2"/>'+
       t(834,1057,'F',59,'#68e8d8','text-anchor="middle" font-weight="700"')+
-      t(833,1101,'CARTA INDISPONÍVEL',14,'#b5dcdb','text-anchor="middle"')+'</g>';
+      t(833,1101,'SEM CARTA ORIGINAL',14,'#b5dcdb','text-anchor="middle"')+'</g>';
   const userName=short(identity.name||'Treinador',24);
   const holder=feature?short(feature.name,18):'Sem titular';
   const starRating=feature?String(feature.ovr)+' OVR':'';
