@@ -11,7 +11,7 @@ const photoHash=(value:unknown):string=>{
 const safeLabel=(value:unknown):string=>String(value??'').replace(/[\r\n\t]/g,' ')
   .replace(/[<>]/g,'').trim().slice(0,32);
 export function profileImageUrl(owner:string,i:Interaction):string{
-  const params=new URLSearchParams({user:owner,rev:'v593.'+Date.now().toString(36)});
+  const params=new URLSearchParams({user:owner,rev:'v594.'+Date.now().toString(36)});
   if(i.guild_id&&/^\d{15,22}$/.test(i.guild_id))params.set('guild',i.guild_id);
   const actor=i.member?.user??i.user;
   const name=safeLabel(i.member?.nick??actor?.global_name??actor?.username??'');
