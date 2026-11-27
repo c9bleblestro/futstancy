@@ -1,4 +1,4 @@
-import {COMMANDS, COMMAND_VERSION} from './commands.ts';
+import {registeredCommands, COMMAND_VERSION} from './commands.ts';
 import {message} from './ui.ts';
 import type {Env,Interaction} from './types.ts';
 
@@ -49,7 +49,7 @@ export async function handleAdminSync(i:Interaction,env:Env,request:SyncFetch=fe
       'https://discord.com/api/v10/applications/'+env.DISCORD_APPLICATION_ID+'/commands',
       {method:'PUT',
         headers:{Authorization:'Bot '+env.DISCORD_BOT_TOKEN,'Content-Type':'application/json'},
-        body:JSON.stringify(COMMANDS),
+        body:JSON.stringify(registeredCommands(env.LIVE_ACTIVITY_ENABLED)),
         signal:AbortSignal.timeout(MAX_SYNC_DURATION_MS),
       }
     );

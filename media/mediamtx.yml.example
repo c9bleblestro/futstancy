@@ -1,0 +1,24 @@
+# Merge into the configuration of your installed MediaMTX version.
+# Replace WORKER_HOST and use valid TLS certificate files.
+authMethod: http
+authHTTPAddress: https://WORKER_HOST/live/auth
+authHTTPExclude: []
+rtsp: false
+rtmp: true
+rtmpEncryption: strict
+rtmpsAddress: :1936
+rtmpServerKey: /certs/privkey.pem
+rtmpServerCert: /certs/fullchain.pem
+hls: true
+hlsAddress: :8888
+hlsVariant: lowLatency
+hlsAlwaysRemux: false
+webrtc: false
+srt: false
+api: false
+metrics: false
+paths:
+  all_others:
+    source: publisher
+    overridePublisher: false
+    record: false
