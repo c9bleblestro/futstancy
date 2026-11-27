@@ -64,7 +64,7 @@ export async function handleAdminSync(i:Interaction,env:Env,request:SyncFetch=fe
   }
   try{
     await env.DB.prepare("INSERT INTO bot_settings(key,value) VALUES('commands_version',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")
-      .bind(COMMAND_VERSION).run();
+      .bind(COMMAND_VERSION+(env.LIVE_ACTIVITY_ENABLED==='1'?'-activity':'')).run();
     await env.DB.prepare("INSERT INTO bot_settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")
       .bind(lastSyncKey,String(now)).run();
   }catch(error){

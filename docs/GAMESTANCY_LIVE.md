@@ -1,21 +1,17 @@
-# GAMESTANCY LIVE — beta
-This adds a separate public live directory and curated external clip links to the existing futstancy Worker. No football records, prefix or existing art are replaced.
+# GAMESTANCY LIVE — Discord Activity beta
 
-## Worker
-Apply migration 0004 using the existing npm run deploy workflow. Set LIVE_PANEL_URL to the HTTPS Worker /live URL; LIVE_HLS_ORIGIN to the trusted HTTPS media origin (no trailing path required); LIVE_INGEST_URL to the RTMPS server base (no stream path); leave LIVE_ACTIVITY_ENABLED unset initially. Do not put credentials in these environment values. No actual media server is provisioned by this commit.
+This release builds the official Embedded App SDK into a browser bundle and serves a dedicated Activity at the Discord iframe root. It shows the real Activity participants and updates on joins/leaves, and lists community clip links. Live screen sharing, live ingest and playback are paused in this release. On 18 November 2026 the ANPD maintained the suspension of Go Live and equivalent one-to-many video features in Brazil. Do not use this project to evade that restriction. The earlier media-server deployment instructions are superseded.
 
-## Media server
-Deploy MediaMTX on an external VPS with a trusted TLS certificate and reverse proxy. See media/mediamtx.yml.example. Replace the callback host, mount certificates, expose RTMPS 1936 and HTTPS HLS through the reverse proxy. Keep HLS port private; do not expose control API. Apply IP/rate limits and bandwidth quotas at the host. Use a public domain with valid TLS, not HTTP. Set up an admin process to stop abusive streams and revoke access. No recordings. Set OBS H264/AAC, 720p30, 2500 kbps, keyframe 2s. For compatible mobile RTMPS encoders use the same private URL; native screen capture APK is not included. Stop the encoder when ending a room: the worker revokes playback and future authentication but does not terminate an already connected publisher on the media server. The four-hour expiration and five-room limit apply to directory/authorization, not a hard bandwidth cap.
+## Required configuration
+1. Deploy the existing Worker after applying D1 migration 0004 (npm run deploy). The Wrangler build runs npm run build:activity and generates the SDK bundle locally. Set the correct DISCORD_APPLICATION_ID (public ID) and keep the existing bot token secret.
+2. In the Discord Developer Portal select the actual GAMESTANCY application, then Activities > URL Mappings. Map / to the actual Worker hostname (no protocol or path). Enable Activities and configure desired installation contexts. Do not change the interaction endpoint.
+3. Configure the application for voice-call Activity testing. Unverified Activities are restricted to app developers and approved testers. Set LIVE_ACTIVITY_ENABLED=1 on the Worker after enabling the Activity in the portal; run /sincronizar or allow the existing versioned registration process. This registers the native Launch entry point without removing football commands.
+4. Enter a voice call, open App Launcher / Activities, select GAMESTANCY, then have another approved tester join. Verify the participant list changes, clip links open safely, and the mobile layout fits. The actual client behavior must be tested; no deployment or Developer Portal change is performed by this repository commit.
 
-## Commands
-- /fut live (or Slive) shows the public panel.
-- /fut live acao:iniciar titulo:... creates a public four-hour room and sends a private RTMPS URL. Never paste this URL in a channel.
-- /fut live acao:encerrar removes own room.
-- /fut live acao:clipe titulo:... url:... publishes a YouTube or Twitch Clips link. Use content you have rights to share.
-- /fut live acao:remover url:CODE removes own clip.
-- /fut live acao:abrir launches the Activity only when explicitly enabled.
+## Routes
+- /activity: browser preview without Discord RPC; no fake participants.
+- / with Discord frame_id and instance_id: dedicated Activity page.
+- /activity/config: public application ID only.
+- /live/api/feed: clip feed, with live rooms suppressed.
 
-## Discord Activity
-The web viewer uses same-origin resources and HLS rather than WebRTC. In Discord Developer Portal enable Activities, configure URL Mapping / to the Worker hostname, and configure both installation contexts if desired. The Worker serves the LIVE page on root when Discord supplies frame_id and instance_id. Test embedded playback, CSP, proxy behavior and mobile before setting LIVE_ACTIVITY_ENABLED=1 and running /sincronizar. That flag includes the primary entry-point command in bulk registration, preserving it. The browser beta does not yet include Embedded App SDK authentication/handshake; integration may need a bundled SDK client before Discord can launch it reliably. Do not enable publicly until these checks pass.
-## Scope
-Public discovery, real HLS playback when configured, per-user private ingest credentials, and external clip sharing only. Private rooms, native Android/iOS screen capture, chat, follows, uploads, TV scheduling and moderation UI remain future work. No fake viewer count or online badge: the player confirms when video actually plays.
+The old web panel and football systems remain intact. No client secret or user OAuth scope is required for the read-only connected-participant list. No user tokens are stored. No shared live player or screen capture is active. Clips are external platform links, not synchronized playback.

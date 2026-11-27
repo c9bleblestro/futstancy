@@ -7,6 +7,7 @@ import {renderProfileImage} from './profile-image.ts';
 import {renderMarketBannerImage} from './market-art-v60.ts';
 import { jsonResponse } from './ui.ts';
 import { handleTextPrefixRequest } from './prefix-endpoint.ts';
+import { handleActivity } from './activity.ts';
 import { handleLiveHttp } from './live.ts';
 import type { Env, Interaction } from './types.ts';
 
@@ -44,14 +45,15 @@ async function ensureCommands(env: Env): Promise<void> {
   }
   try {
     const version = await env.DB.prepare("SELECT value FROM bot_settings WHERE key='commands_version'").first<{ value: string }>();
-    if (version?.value === COMMAND_VERSION) return;
+    const desiredVersion=COMMAND_VERSION+(env.LIVE_ACTIVITY_ENABLED==='1'?'-activity':'');
+    if (version?.value === desiredVersion) return;
     const response = await fetch(`https://discord.com/api/v10/applications/${env.DISCORD_APPLICATION_ID}/commands`, {
       method: 'PUT',
       headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(registeredCommands(env.LIVE_ACTIVITY_ENABLED)),
     });
     if (!response.ok) throw new Error(`Discord HTTP ${response.status}: ${(await response.text()).slice(0, 300)}`);
-    await env.DB.prepare("INSERT INTO bot_settings(key,value) VALUES('commands_version', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(COMMAND_VERSION).run();
+    await env.DB.prepare("INSERT INTO bot_settings(key,value) VALUES('commands_version', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(desiredVersion).run();
     console.log('[REGISTER] Slash commands publicados com sucesso.');
   } catch (err) {
     console.error('[REGISTER] Erro ao registrar comandos:', err instanceof Error ? err.message : String(err));
@@ -64,7 +66,8 @@ const landing = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><
 export default {
   async fetch(request: Request, env: Env, ctx: WorkerCtx): Promise<Response> {
     const url = new URL(request.url);
-    if(url.pathname==='/live'||url.pathname.startsWith('/live/')||(url.pathname==='/'&&url.searchParams.has('frame_id')&&url.searchParams.has('instance_id')))return handleLiveHttp(request,env);
+    if(url.pathname==='/activity'||url.pathname.startsWith('/activity/')||(url.pathname==='/'&&url.searchParams.has('frame_id')&&url.searchParams.has('instance_id')))return handleActivity(request,env);
+    if(url.pathname==='/live'||url.pathname.startsWith('/live/'))return handleLiveHttp(request,env);
     if(url.pathname==='/prefix/execute')return handleTextPrefixRequest(request,env);
     if (request.method === 'GET' && url.pathname === '/art/status') {
       return jsonResponse({ status: 'ready', version: '5.9.4', routes: ['player.png', 'collection.png', 'market.png', 'team.png', 'pack.png', 'score.png', 'banner.png','squad.png','profile.png','market-banner.png'] });

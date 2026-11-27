@@ -22,7 +22,7 @@ test('prefix cannot request private credentials and panel is V2',async()=>{
 });
 test('missing media config does not create a room',async()=>{
   const output=await handleLiveCommand({...i,token:'test',application_id:'app'},env,user,[{name:'acao',type:3,value:'iniciar'}]);
-  assert.match(JSON.stringify(output),/não configurado/);
+  assert.match(JSON.stringify(output),/indisponível/);
 });
 test('Activity registration is opt-in and public panel is real HTML',async()=>{
   assert.equal(registeredCommands().length,3);

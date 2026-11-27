@@ -1,6 +1,8 @@
 import type {Env,Interaction,Option} from './types.ts';
 import { LIVE_HTML, LIVE_JS, LIVE_CSS } from './live-page.ts';
 const HOURS=4*3600000;
+// Safety pause: live distribution is not offered in this release.
+const TRANSMISSIONS_PAUSED:boolean=true;
 const idPattern=/^[a-f0-9]{32}$/;
 const tokenPattern=/^[a-f0-9]{64}$/;
 const randomId=()=>crypto.randomUUID().replaceAll('-','');
@@ -33,10 +35,11 @@ export async function handleLiveCommand(i:Interaction,env:Env,uid:string,args:Op
   const action=opt('acao')||'painel';
   const genuine=Boolean(i.token&&i.application_id);
   const owner=clean(i.member?.user?.global_name??i.member?.user?.username??i.user?.username??'Criador',60);
-  if(action==='painel')return result('Transmissões públicas, clipes e criadores em um só lugar.\n\nPara transmitir, use **/fut live acao:iniciar**. Não compartilhe sua chave de transmissão.',panel(env));
+  if(action==='painel')return result('Abra GAMESTANCY LIVE pelo menu de Atividades da call. Clipes e criadores da comunidade. Transmissão ao vivo temporariamente indisponível.',panel(env));
   if(!genuine)return result('Use o comando slash /fut live para esta ação. O prefixo S não pode exibir credenciais privadas.');
   if(action==='abrir')return env.LIVE_ACTIVITY_ENABLED==='1'?{type:12}:result('A Activity ainda precisa ser habilitada no Developer Portal. A central web está disponível no botão.',panel(env));
   if(action==='iniciar'){
+    if(TRANSMISSIONS_PAUSED)return result('Transmissão ao vivo indisponível nesta versão; o servidor de vídeo ainda não está disponível.');
     const ingest=safeUrl(env.LIVE_INGEST_URL,'rtmps:');
     if(!ingest||!safeUrl(env.LIVE_HLS_ORIGIN,'https:'))return result('Servidor de vídeo ainda não configurado. Nenhuma transmissão foi criada.',panel(env));
     const title=clean(opt('titulo'));
@@ -70,6 +73,7 @@ async function room(env:Env,id:string):Promise<Room|null>{return env.DB.prepare(
 export async function handleLiveHttp(request:Request,env:Env):Promise<Response>{
   const u=new URL(request.url),p=u.pathname;
   try{
+    if(TRANSMISSIONS_PAUSED&&(p==='/live/auth'||p.startsWith('/live/media/')))return no(p==='/live/auth'&&request.method!=='POST'?405:403);
     if(p==='/live/auth'){
       if(request.method!=='POST')return no(405);
       if(Number(request.headers.get('content-length')??0)>4096)return no(413);
@@ -97,7 +101,7 @@ export async function handleLiveHttp(request:Request,env:Env):Promise<Response>{
         env.DB.prepare('SELECT id,title,owner_name,created_ms FROM live_rooms WHERE expires_ms>? ORDER BY created_ms DESC LIMIT 5').bind(now).all(),
         env.DB.prepare('SELECT id,title,owner_name,url,created_ms FROM live_clips ORDER BY created_ms DESC LIMIT 50').all()
       ]);
-      return json({rooms:rooms.results,clips:clips.results,configured:!!safeUrl(env.LIVE_HLS_ORIGIN,'https:')&&!!safeUrl(env.LIVE_INGEST_URL,'rtmps:')});
+      return json({rooms:TRANSMISSIONS_PAUSED?[]:rooms.results,clips:clips.results,configured:!TRANSMISSIONS_PAUSED&&!!safeUrl(env.LIVE_HLS_ORIGIN,'https:')&&!!safeUrl(env.LIVE_INGEST_URL,'rtmps:')});
     }
     const m=p.match(/^\/live\/media\/([a-f0-9]{32})\/([\w.-]{1,120}\.(?:m3u8|mp4|m4s|ts))$/);
     if(m){
