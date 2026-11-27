@@ -1,7 +1,6 @@
 import { getPlayer, PLAYERS } from './catalog.ts';
 import {squadPanel,squadCandidates,squadDetail} from './squad-ui.ts';
 import {profilePanel} from './profile-ui.ts';
-import { handleLiveCommand } from './live.ts';
 import { COMMAND_ROOT } from './commands.ts';
 import {handleAdminSync,isAdminSyncName} from './admin-sync.ts';
 import { SLOT_POSITION, timeRemaining, teamStrength } from './game.ts';
@@ -13,7 +12,6 @@ import type { Env, Interaction, Option } from './types.ts';
 
 const help = [
   '-# Prefixo: **Sobter**, **Spacote ouro**, **Scolecao**  ·  Slash: **/fut obter**',
-  '**/fut live** ou **Slive** › GAMESTANCY LIVE: transmissões e clipes',
   '### 🎮 COMEÇAR A JOGAR',
   '**/fut iniciar**  ›  Crie seu clube com 11 jogadores e 1.500 coins',
   '**/fut obter**  ›  Carta gratuita a cada 25 minutos',
@@ -384,7 +382,6 @@ async function dispatchInteraction(i: Interaction, env: Env): Promise<object> {
   const action = opt?.name ?? 'ajuda';
   const args = opt?.options ?? [];
 
-  if(action==='live')return handleLiveCommand(i,env,uid,args);
   if (action === 'ajuda') return card('⚽ FUTSTANCY — Guia do treinador', help, PURPLE, false);
   if(action==='iniciar'){
     const made=await start(env.DB,uid);

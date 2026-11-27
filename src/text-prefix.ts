@@ -27,9 +27,6 @@ export function parseTextPrefix(content: string):PrefixParseResult {
   const first=normalize(args[0]??'');
   const opt:Option[]=[];
   switch(name){
-    case 'live':
-      if(args.length)return usage('Slive (para gerenciar ou iniciar, use /fut live)');
-      break;
     case 'pacote':
       if(args.length){
         if(!packTypes.has(first))return usage('Spacote [misto|comum|prata|ouro|icone|lendario|eclipse]');

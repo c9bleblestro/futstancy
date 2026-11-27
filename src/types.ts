@@ -15,10 +15,6 @@ export interface Env {
   DISCORD_APPLICATION_ID?: string;
   DISCORD_BOT_TOKEN?: string;
   PREFIX_GATEWAY_SECRET?: string;
-  LIVE_INGEST_URL?: string;
-  LIVE_HLS_ORIGIN?: string;
-  LIVE_PANEL_URL?: string;
-  LIVE_ACTIVITY_ENABLED?: string;
 }
 export interface Option {
   name: string;

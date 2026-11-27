@@ -1,4 +1,4 @@
-import {registeredCommands, COMMAND_VERSION} from './commands.ts';
+import {COMMANDS, COMMAND_VERSION} from './commands.ts';
 import {message} from './ui.ts';
 import type {Env,Interaction} from './types.ts';
 
@@ -49,7 +49,7 @@ export async function handleAdminSync(i:Interaction,env:Env,request:SyncFetch=fe
       'https://discord.com/api/v10/applications/'+env.DISCORD_APPLICATION_ID+'/commands',
       {method:'PUT',
         headers:{Authorization:'Bot '+env.DISCORD_BOT_TOKEN,'Content-Type':'application/json'},
-        body:JSON.stringify(registeredCommands(env.LIVE_ACTIVITY_ENABLED)),
+        body:JSON.stringify(COMMANDS),
         signal:AbortSignal.timeout(MAX_SYNC_DURATION_MS),
       }
     );
@@ -64,7 +64,7 @@ export async function handleAdminSync(i:Interaction,env:Env,request:SyncFetch=fe
   }
   try{
     await env.DB.prepare("INSERT INTO bot_settings(key,value) VALUES('commands_version',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")
-      .bind(COMMAND_VERSION+(env.LIVE_ACTIVITY_ENABLED==='1'?'-activity':'')).run();
+      .bind(COMMAND_VERSION).run();
     await env.DB.prepare("INSERT INTO bot_settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")
       .bind(lastSyncKey,String(now)).run();
   }catch(error){

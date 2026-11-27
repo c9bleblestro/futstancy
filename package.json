@@ -13,15 +13,11 @@
     "db:remote": "wrangler d1 migrations apply DB --remote",
     "start": "node gateway/start.mjs",
     "gateway:start": "node gateway/start.mjs",
-    "gateway:check": "node --check gateway/start.mjs",
-    "build:activity": "node scripts/build-activity.mjs",
-    "pretypecheck": "npm run build:activity",
-    "pretest": "npm run build:activity"
+    "gateway:check": "node --check gateway/start.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
-    "wrangler": "^4.49.0",
-    "esbuild": "0.25.12"
+    "wrangler": "^4.49.0"
   },
   "engines": {
     "node": ">=22"
@@ -44,7 +40,6 @@
   },
   "dependencies": {
     "@cf-wasm/resvg": "^0.3.5",
-    "discord.js": "^14.28.1",
-    "@discord/embedded-app-sdk": "1.9.0"
+    "discord.js": "^14.28.1"
   }
 }
